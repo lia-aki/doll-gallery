@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>うちの子展示室 | My Doll Brand</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap');
+        body { background-color: #fff9fa; color: #5a5255; font-family: 'Noto Sans JP', sans-serif; }
+        .masonry { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); grid-gap: 20px; }
+        .masonry-item { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 20px rgba(255,182,193,0.1); }
+        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #ff9a9e; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="p-6">
+
+    <header class="text-center mb-10">
+        <h1 class="text-3xl font-bold text-[#d87a80] mb-2">うちの子展示室</h1>
+        <p class="text-xs text-gray-400 tracking-widest">PHOTO GALLERY & CAMPAIGN</p>
+    </header>
+
+    <section class="max-w-xl mx-auto mb-16 bg-white p-8 rounded-3xl shadow-sm border border-pink-50">
+        <div class="text-center space-y-4">
+            <h2 class="font-bold text-pink-600">✨ 月末抽選キャンペーン実施中 ✨</h2>
+            <p class="text-xs text-gray-500">当店の衣装を着たドールさんの写真を投稿してください</p>
+            
+            <input type="text" id="twitter_id" placeholder="X (Twitter) ID (@なし)" class="w-full border-b py-2 text-center outline-none focus:border-pink-300">
+            
+            <input type="file" id="file_input" accept="image/*" class="hidden">
+            <button onclick="document.getElementById('file_input').click()" class="block w-full bg-pink-400 text-white font-bold py-3 rounded-full shadow-md hover:bg-pink-500 transition">
+                写真を選んで投稿する
+            </button>
+            <div id="status" class="text-xs text-pink-400 mt-2"></div>
+            <div id="loader" class="loading-spinner mx-auto"></div>
+        </div>
+    </section>
+
+    <div id="gallery" class="masonry max-w-6xl mx-auto">
+        </div>
+
+    <script>
+        // 1. 初始化 Supabase (替换你的配置)
+        const SUPABASE_URL = 'https://eiladnaqqcddtkfqypvb.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbGFkbmFxcWNkZHRrZnF5cHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNTI1MjAsImV4cCI6MjA4NjkyODUyMH0.ypTl6LS3wvjc_24-eCNOxvvZVOAQ6F_PGhoXfHWW8pY';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const fileInput = document.getElementById('file_input');
+        const statusText = document.getElementById('status');
+        const loader = document.getElementById('loader');
+
+        // 2. 加载已审核的照片
+        async function loadPhotos() {
+            const { data, error } = await supabase
+                .from('gallery')
+                .select('*')
+                .eq('is_approved', true) // 只显示审核通过的
+                .order('created_at', { ascending: false });
+
+            if (data) {
+                const galleryDiv = document.getElementById('gallery');
+                galleryDiv.innerHTML = data.map(item => `
+                    <div class="masonry-item">
+                        <img src="${item.url}" class="w-full object-cover">
+                        <div class="p-3 text-[10px] text-gray-400">Owner: @${item.twitter_id || 'Anonymous'}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 3. 上传逻辑
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            const twitterId = document.getElementById('twitter_id').value;
+            if (!file) return;
+
+            loader.style.display = 'block';
+            statusText.innerText = 'アップロード中...';
+
+            // A. 上传图片到存储桶
+            const fileName = Date.now() + '_' + file.name;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('photos')
+                .upload(fileName, file);
+
+            if (uploadError) {
+                statusText.innerText = 'エラーが発生しました。';
+                loader.style.display = 'none';
+                return;
+            }
+
+            // B. 获取公开链接
+            const { data: urlData } = supabase.storage.from('photos').getPublicUrl(fileName);
+
+            // C. 写入数据库
+            await supabase.from('gallery').insert([
+                { url: urlData.publicUrl, twitter_id: twitterId, is_approved: false }
+            ]);
+
+            statusText.innerText = '投稿完了！承認後に表示されます。';
+            loader.style.display = 'none';
+        };
+
+        loadPhotos();
+    </script>
+</body>
+</html>
