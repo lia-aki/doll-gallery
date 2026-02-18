@@ -3,106 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>うちの子展示室 | My Doll Brand</title>
+    <title>うちの子展示室 | My Doll Brand Gallery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap');
-        body { background-color: #fff9fa; color: #5a5255; font-family: 'Noto Sans JP', sans-serif; }
-        .masonry { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); grid-gap: 20px; }
-        .masonry-item { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 20px rgba(255,182,193,0.1); }
-        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #ff9a9e; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
+        body { 
+            background-color: #fff9fa; 
+            color: #5a5255; 
+            font-family: 'Noto Sans JP', sans-serif; 
+            margin: 0;
+        }
+        .masonry { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+            grid-gap: 20px; 
+            grid-auto-flow: dense; 
+        }
+        .masonry-item { 
+            background: white; 
+            border-radius: 15px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 20px rgba(255, 182, 193, 0.15); 
+            transition: transform 0.3s ease;
+        }
+        .masonry-item:hover { transform: translateY(-5px); }
+        .loading-spinner { 
+            border: 3px solid #f3f3f3; 
+            border-top: 3px solid #ff9a9e; 
+            border-radius: 50%; 
+            width: 24px; 
+            height: 24px; 
+            animation: spin 1s linear infinite; 
+            display: none; 
+            margin: 10px auto;
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="p-6">
+<body class="p-4 md:p-10">
 
     <header class="text-center mb-10">
         <h1 class="text-3xl font-bold text-[#d87a80] mb-2">うちの子展示室</h1>
-        <p class="text-xs text-gray-400 tracking-widest">PHOTO GALLERY & CAMPAIGN</p>
+        <p class="text-xs text-gray-400 tracking-widest uppercase">My Doll Brand Photo Gallery</p>
     </header>
 
-    <section class="max-w-xl mx-auto mb-16 bg-white p-8 rounded-3xl shadow-sm border border-pink-50">
-        <div class="text-center space-y-4">
-            <h2 class="font-bold text-pink-600">✨ 月末抽選キャンペーン実施中 ✨</h2>
-            <p class="text-xs text-gray-500">当店の衣装を着たドールさんの写真を投稿してください</p>
+    <section class="max-w-xl mx-auto mb-16 bg-white border border-pink-100 rounded-3xl p-8 shadow-sm">
+        <div class="text-center">
+            <h2 class="text-lg font-bold text-pink-600 mb-4">✨ フォトキャンペーン実施中 ✨</h2>
+            <p class="text-sm text-gray-500 mb-6 leading-relaxed">
+                お写真を投稿いただいた方の中から、毎月抽選で<br>
+                新作アクセサリーをプレゼントいたします。
+            </p>
             
-            <input type="text" id="twitter_id" placeholder="X (Twitter) ID (@なし)" class="w-full border-b py-2 text-center outline-none focus:border-pink-300">
-            
-            <input type="file" id="file_input" accept="image/*" class="hidden">
-            <button onclick="document.getElementById('file_input').click()" class="block w-full bg-pink-400 text-white font-bold py-3 rounded-full shadow-md hover:bg-pink-500 transition">
-                写真を選んで投稿する
-            </button>
-            <div id="status" class="text-xs text-pink-400 mt-2"></div>
-            <div id="loader" class="loading-spinner mx-auto"></div>
+            <div class="space-y-4">
+                <input type="text" id="twitter_id" placeholder="X (Twitter) ID (@なし)" 
+                       class="w-full border-b-2 border-pink-50 py-2 px-4 focus:outline-none focus:border-pink-300 text-center">
+                
+                <input type="file" id="file_input" accept="image/*" class="hidden">
+                <button onclick="document.getElementById('file_input').click()" 
+                        class="w-full bg-pink-400 hover:bg-pink-500 text-white font-bold py-3 rounded-full shadow-lg transition duration-300">
+                    写真を投稿する
+                </button>
+                
+                <div id="loader" class="loading-spinner"></div>
+                <div id="status" class="text-xs text-pink-400 mt-2"></div>
+                <p class="text-[10px] text-gray-400 mt-4">
+                    ※投稿された写真は運営の承認後に反映されます。<br>
+                    ※大きな画像は自動的に最適化（圧縮）されます。
+                </p>
+            </div>
         </div>
     </section>
 
-    <div id="gallery" class="masonry max-w-6xl mx-auto">
+    <div id="gallery" class="masonry max-w-7xl mx-auto">
         </div>
 
+    <footer class="mt-20 py-10 border-t border-pink-50 text-center text-gray-400 text-[10px]">
+        <p>&copy; 2026 My Doll Brand. All Rights Reserved.</p>
+    </footer>
+
     <script>
-        // 1. 初始化 Supabase (替换你的配置)
-        const SUPABASE_URL = 'https://eiladnaqqcddtkfqypvb.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbGFkbmFxcWNkZHRrZnF5cHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNTI1MjAsImV4cCI6MjA4NjkyODUyMH0.ypTl6LS3wvjc_24-eCNOxvvZVOAQ6F_PGhoXfHWW8pY';
-        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // --- 設定エリア (ここをあなたの情報に書き換えてください) ---
+        const SB_URL = 'https://eiladnaqqcddtkfqypvb.supabase.co'; 
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbGFkbmFxcWNkZHRrZnF5cHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNTI1MjAsImV4cCI6MjA4NjkyODUyMH0.ypTl6LS3wvjc_24-eCNOxvvZVOAQ6F_PGhoXfHWW8pY'; // 此处替换为你的 Anon Key
+        const myAppClient = supabase.createClient(SB_URL, SB_KEY);
 
         const fileInput = document.getElementById('file_input');
         const statusText = document.getElementById('status');
         const loader = document.getElementById('loader');
+        const twitterInput = document.getElementById('twitter_id');
 
-        // 2. 加载已审核的照片
+        // 1. ギャラリーの読み込み (Load Photos)
         async function loadPhotos() {
-            const { data, error } = await sbClient
+            const { data, error } = await myAppClient
                 .from('gallery')
                 .select('*')
-                .eq('is_approved', true) // 只显示审核通过的
+                .eq('is_approved', true) // 承認済みのみ
                 .order('created_at', { ascending: false });
 
             if (data) {
                 const galleryDiv = document.getElementById('gallery');
                 galleryDiv.innerHTML = data.map(item => `
                     <div class="masonry-item">
-                        <img src="${item.url}" class="w-full object-cover">
-                        <div class="p-3 text-[10px] text-gray-400">Owner: @${item.twitter_id || 'Anonymous'}</div>
+                        <img src="${item.url}" class="w-full h-auto block" loading="lazy">
+                        <div class="p-3 flex justify-between items-center bg-white">
+                            <span class="text-[10px] font-bold text-gray-400">Owner: @${item.twitter_id || '匿名'}</span>
+                            <span class="text-[9px] text-gray-300">${item.file_size ? item.file_size + 'KB' : ''}</span>
+                        </div>
                     </div>
                 `).join('');
             }
         }
 
-        // 3. 上传逻辑
-        fileInput.onchange = async (e) => {
-            const file = e.target.files[0];
-            const twitterId = document.getElementById('twitter_id').value;
-            if (!file) return;
+        // 2. 画像圧縮ロジック (Image Compression)
+        const compressImage = (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1200; // 展示用には1200pxで十分
+                        let width = img.width;
+                        let height = img.height;
 
-            loader.style.display = 'block';
-            statusText.innerText = 'アップロード中...';
-
-            // A. 上传图片到存储桶
-            const fileName = Date.now() + '_' + file.name;
-            const { data: uploadData, error: uploadError } = await sbClient.storage
-                .from('photos')
-                .upload(fileName, file);
-
-            if (uploadError) {
-                statusText.innerText = 'エラーが発生しました。';
-                loader.style.display = 'none';
-                return;
-            }
-
-            // B. 获取公开链接
-            const { data: urlData } = sbClient.storage.from('photos').getPublicUrl(fileName);
-
-            // C. 写入数据库
-            await sbClient.from('gallery').insert([
-                { url: urlData.publicUrl, twitter_id: twitterId, is_approved: false }
-            ]);
-
-            statusText.innerText = '投稿完了！承認後に表示されます。';
-            loader.style.display = 'none';
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        canvas.toBlob((blob) => {
+                            resolve(blob);
+                        }, 'image/jpeg', 0.8); // 80%の画質で圧縮
+                    };
+                };
+            });
         };
 
+        // 3. 投稿処理 (Upload Logic)
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // ローディング開始
+            loader.style.display = 'block';
+            statusText.innerText = '画像を最適化中...';
+
+            try {
+                // A. 圧縮
+                const compressedBlob = await compressImage(file);
+                const fileSizeKB = (compressedBlob.size / 1024).toFixed(1);
+                const fileName = `${Date.now()}.jpg`;
+
+                statusText.innerText = 'アップロード中...';
+
+                // B. Storageへアップロード
+                const { data: uploadData, error: uploadError } = await myAppClient.storage
+                    .from('photos')
+                    .upload(fileName, compressedBlob);
+
+                if (uploadError) throw uploadError;
+
+                // C. 公開URL取得
+                const { data: urlData } = myAppClient.storage.from('photos').getPublicUrl(fileName);
+
+                // D. データベースへ登録
+                const twitterId = twitterInput.value || 'Anonymous';
+                const { error: dbError } = await myAppClient.from('gallery').insert([
+                    { 
+                        url: urlData.publicUrl, 
+                        twitter_id: twitterId, 
+                        is_approved: false,
+                        file_size: fileSizeKB 
+                    }
+                ]);
+
+                if (dbError) throw dbError;
+
+                statusText.innerText = '投稿が完了しました！承認をお待ちください。';
+                twitterInput.value = ''; // 入力欄をクリア
+            } catch (err) {
+                console.error(err);
+                statusText.innerText = 'エラーが発生しました: ' + (err.message || '通信失敗');
+            } finally {
+                loader.style.display = 'none';
+            }
+        };
+
+        // 初期読み込み実行
         loadPhotos();
     </script>
 </body>
