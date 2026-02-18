@@ -45,7 +45,7 @@
         // 1. 初始化 Supabase (替换你的配置)
         const SUPABASE_URL = 'https://eiladnaqqcddtkfqypvb.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbGFkbmFxcWNkZHRrZnF5cHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNTI1MjAsImV4cCI6MjA4NjkyODUyMH0.ypTl6LS3wvjc_24-eCNOxvvZVOAQ6F_PGhoXfHWW8pY';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const fileInput = document.getElementById('file_input');
         const statusText = document.getElementById('status');
@@ -53,7 +53,7 @@
 
         // 2. 加载已审核的照片
         async function loadPhotos() {
-            const { data, error } = await supabase
+            const { data, error } = await sbClient
                 .from('gallery')
                 .select('*')
                 .eq('is_approved', true) // 只显示审核通过的
@@ -81,7 +81,7 @@
 
             // A. 上传图片到存储桶
             const fileName = Date.now() + '_' + file.name;
-            const { data: uploadData, error: uploadError } = await supabase.storage
+            const { data: uploadData, error: uploadError } = await sbClient.storage
                 .from('photos')
                 .upload(fileName, file);
 
@@ -92,10 +92,10 @@
             }
 
             // B. 获取公开链接
-            const { data: urlData } = supabase.storage.from('photos').getPublicUrl(fileName);
+            const { data: urlData } = sbClient.storage.from('photos').getPublicUrl(fileName);
 
             // C. 写入数据库
-            await supabase.from('gallery').insert([
+            await sbClient.from('gallery').insert([
                 { url: urlData.publicUrl, twitter_id: twitterId, is_approved: false }
             ]);
 
