@@ -277,49 +277,63 @@
 
 	async function startVortexAnimation(winnerData) {
 	    const stage = document.getElementById('lottery-stage');
-	    stage.style.display = 'block';
+	    if (!stage) return;
 
-	    // 获取现有图片库作为“群众演员”
-	    const { data: photos } = await myAppClient.from('gallery').select('url').limit(20);
+	    // 强制显示舞台
+	    stage.style.display = 'block';
+	    stage.style.opacity = '1';
+
+	    // 获取素材（用于漩涡的碎片）
+	    const { data: photos } = await sbClient.from('gallery').select('url').limit(15);
 	    const centerX = window.innerWidth / 2;
 	    const centerY = window.innerHeight / 2;
 
-	    // 创建漩涡碎片
+	    // 清空舞台（防止重复触发导致卡顿）
+	    const oldItems = stage.querySelectorAll('.vortex-item');
+	    oldItems.forEach(el => el.remove());
+
 	    const items = [];
-	    for (let i = 0; i < 20; i++) {
+	    const count = 20; // 碎片数量
+
+	    for (let i = 0; i < count; i++) {
 	        const img = document.createElement('img');
-	        img.src = i === 19 ? winnerData.winner_url : photos[i % photos.length].url;
+	        // 如果是最后一个，则是真正的中奖图
+	        const isWinner = (i === count - 1);
+	        img.src = isWinner ? winnerData.winner_url : (photos[i % photos.length]?.url || winnerData.winner_url);
 	        img.className = 'vortex-item';
 	        
-	        // 初始位置：随机散布在屏幕边缘外
+	        // 初始位置：屏幕外的圆周
 	        const angle = Math.random() * Math.PI * 2;
 	        const radius = Math.max(window.innerWidth, window.innerHeight);
 	        img.style.left = `${centerX + Math.cos(angle) * radius}px`;
 	        img.style.top = `${centerY + Math.sin(angle) * radius}px`;
+	        img.style.zIndex = isWinner ? "110" : "105";
 	        
 	        stage.appendChild(img);
-	        items.push({ el: img, angle: angle });
+	        items.push({ el: img, isWinner: isWinner });
 	    }
 
-	    // 动画启动：向中心旋转汇聚
+	    // 启动动画：延迟 100ms 确保浏览器已渲染初始位置
 	    setTimeout(() => {
-	        items.forEach((item, index) => {
-	            const isWinner = index === 19;
-	            if (isWinner) {
+	        items.forEach((item) => {
+	            if (item.isWinner) {
+	                // 中奖图定格中心
 	                item.el.classList.add('winner-final');
+	                item.el.style.left = '50%';
+	                item.el.style.top = '45%';
 	            } else {
-	                // 普通图片随机飞向中心并消失
-	                item.el.style.left = `${centerX + (Math.random() - 0.5) * 100}px`;
-	                item.el.style.top = `${centerY + (Math.random() - 0.5) * 100}px`;
+	                // 普通碎片向中心旋转并消失
+	                item.el.style.left = `${centerX}px`;
+	                item.el.style.top = `${centerY}px`;
+	                item.el.style.transform = `rotate(${720 + Math.random() * 1000}deg) scale(0)`;
 	                item.el.style.opacity = '0';
-	                item.el.style.transform = 'rotate(720deg) scale(0)';
 	            }
 	        });
 	        
 	        // 显示文字
 	        setTimeout(() => {
 	            document.getElementById('winner-id-display').innerText = `@${winnerData.winner_twitter} 様`;
-	            document.getElementById('winner-text').classList.remove('opacity-0');
+	            document.getElementById('winner-text').style.opacity = '1';
 	        }, 2000);
 	    }, 100);
 	}
