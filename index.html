@@ -227,7 +227,7 @@
 		// 1. 中選者のデータを取得してアニメーションを開始する
 		async function checkLottery() {
 		    // 最新の当選者1名を取得
-		    const { data, error } = await sbClient
+		    const { data, error } = await myAppClient
 		        .from('lottery_results')
 		        .select('*')
 		        .order('draw_time', { ascending: false })
@@ -254,7 +254,7 @@
 		    overlay.classList.remove('hidden');
 
 		    // ギャラリーからランダムな画像を取得してシャッフル用にする
-		    const { data: allPhotos } = await sbClient.from('gallery').select('url').eq('is_approved', true).limit(10);
+		    const { data: allPhotos } = await myAppClient.from('gallery').select('url').eq('is_approved', true).limit(10);
 		    
 		    // 画像カードを生成
 		    const cards = allPhotos.map(p => p.url);
