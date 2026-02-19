@@ -94,8 +94,26 @@
         const loader = document.getElementById('loader');
         const twitterInput = document.getElementById('twitter_id');
 
+		// 投稿できるかをコントロール
+		async function checkUploadStatus() {
+		    const { data, error } = await myAppClient
+		        .from('settings')
+		        .select('value')
+		        .eq('key', 'is_upload_enabled')
+		        .single();
+
+		    const uploadSection = document.getElementById('upload-section');
+
+		    if (data && data.value === false) {
+		        uploadSection.style.display = 'none';
+		    } else {
+		        uploadSection.style.display = 'block';
+		    }
+		}
+
         // 1. ギャラリーの読み込み (Load Photos)
         async function loadPhotos() {
+        
             const { data, error } = await myAppClient
                 .from('gallery')
                 .select('*')
@@ -199,6 +217,7 @@
 
         // 初期読み込み実行
         loadPhotos();
+        checkUploadStatus();
     </script>
 </body>
 </html>
