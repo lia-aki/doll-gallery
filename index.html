@@ -41,44 +41,46 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         /* 抽奖容器：全屏透明，背景模糊 */
-		#lottery-stage {
-		    position: fixed;
-		    inset: 0;
-		    z-index: 100;
-		    display: none;
-		    background: rgba(0, 0, 0, 0.6); /* 暗化背景图片墙 */
-		    backdrop-filter: blur(4px);
-		    overflow: hidden;
-		}
+	#lottery-stage {
+	    position: fixed;
+	    inset: 0;
+	    z-index: 9999; /* 必须是最大，确保盖在图片墙上 */
+	    background: rgba(0, 0, 0, 0.75); /* 深色透明背景，突出中奖图 */
+	    backdrop-filter: blur(8px); /* 背景模糊感 */
+	    display: none; /* 初始隐藏 */
+	    align-items: center;
+	    justify-content: center;
+	}
 
-		/* 旋转的图片碎片 */
-		.vortex-item {
-		    position: absolute;
-		    width: 120px;
-		    height: 120px;
-		    object-fit: cover;
-		    border-radius: 10px;
-		    transition: all 2s cubic-bezier(0.25, 0.1, 0.25, 1);
-		}
+	.vortex-item {
+	    position: absolute;
+	    width: 140px;
+	    height: 140px;
+	    object-fit: cover;
+	    border-radius: 15px;
+	    transition: all 2.5s cubic-bezier(0.19, 1, 0.22, 1);
+	    pointer-events: none; /* 防止遮挡点击事件 */
+	}
 
-		/* 最终中奖图片的定格样式 */
-		.winner-final {
-		    position: absolute;
-		    left: 50%;
-		    top: 45%;
-		    transform: translate(-50%, -50%) scale(2.5) !important;
-		    z-index: 110;
-		    border: 4px solid #ff9a9e;
-		    box-shadow: 0 0 30px rgba(255, 154, 158, 0.8);
-		}
+	.winner-final {
+	    /* 最终定格位置强制在中心 */
+	    left: 50% !important;
+	    top: 45% !important;
+	    transform: translate(-50%, -50%) scale(2.2) !important;
+	    z-index: 10000;
+	    border: 6px solid #ff9a9e;
+	    box-shadow: 0 0 50px rgba(255, 154, 158, 0.8);
+	}
     </style>
 </head>
 <body class="p-4 md:p-10">
 	<div id="lottery-stage">
-	    <div id="winner-text" class="absolute bottom-20 w-full text-center opacity-0 transition-opacity duration-1000">
-	        <h2 class="text-3xl font-bold text-white mb-2">🎉 当選おめでとうございます！ 🎉</h2>
-	        <p id="winner-id-display" class="text-xl text-pink-300 font-bold"></p>
-	        <button onclick="closeLottery()" class="mt-6 px-6 py-2 bg-white/20 text-white rounded-full border border-white/50 hover:bg-white/30 transition">閉じる</button>
+	    <div id="winner-text" class="absolute bottom-20 w-full text-center opacity-0 transition-opacity duration-1000" style="z-index: 10001;">
+	        <h2 class="text-3xl font-bold text-white mb-2">🎉 ご当選おめでとうございます！ 🎉</h2>
+	        <p id="winner-id-display" class="text-xl text-pink-300 font-bold mb-6"></p>
+	        <button onclick="closeLottery()" class="px-10 py-3 bg-pink-500 text-white rounded-full font-bold shadow-lg hover:bg-pink-600 transition">
+	            閉じる
+	        </button>
 	    </div>
 	</div>
     <header class="text-center mb-10">
@@ -257,23 +259,27 @@
 
 		// 1. 中選者のデータを取得してアニメーションを開始する
 		async function checkLottery() {
-	    // 如果本次会话已经看过了，就不再显示
-	    if (sessionStorage.getItem('lottery_viewed')) return;
+		    // 【关键点1】检查浏览器缓存，如果本轮会话已看过，直接拦截，不执行后续逻辑
+		    if (sessionStorage.getItem('lottery_viewed') === 'true') {
+		        console.log("抽奖动画本轮已播放过，跳过");
+		        return;
+		    }
 
-	    const { data, error } = await myAppClient
-	        .from('lottery_results')
-	        .select('*')
-	        .order('draw_time', { ascending: false })
-	        .limit(1)
-	        .single();
+		    // 【关键点2】只获取 flag 为 true 的最新中奖信息
+		    const { data, error } = await myAppClient
+		        .from('lottery_results')
+		        .select('*')
+		        .eq('flag', true) // 仅筛选中奖者
+		        .order('draw_time', { ascending: false })
+		        .limit(1)
+		        .single();
 
-	    if (data) {
-	        const drawDate = new Date(data.draw_time);
-	        if (new Date() - drawDate < 24 * 60 * 60 * 1000) { 
-	            startVortexAnimation(data);
-	        }
-	    }
-	}
+		    if (data) {
+		        // 只有存在 true 的数据且符合时间要求（可选）才播放
+		        console.log("发现中奖者，准备播放动画:", data);
+		        startVortexAnimation(data);
+		    }
+		}
 
 	async function startVortexAnimation(winnerData) {
 	    const stage = document.getElementById('lottery-stage');
@@ -284,7 +290,7 @@
 	    stage.style.opacity = '1';
 
 	    // 获取素材（用于漩涡的碎片）
-	    const { data: photos } = await sbClient.from('gallery').select('url').limit(15);
+	    const { data: photos } = await myAppClient.from('gallery').select('url').limit(15);
 	    const centerX = window.innerWidth / 2;
 	    const centerY = window.innerHeight / 2;
 
@@ -338,14 +344,18 @@
 	    }, 100);
 	}
 
-	function closeLottery() {
-	    document.getElementById('lottery-stage').style.opacity = '0';
-	    setTimeout(() => {
-	        document.getElementById('lottery-stage').style.display = 'none';
-	        // 标记为已观看
-	        sessionStorage.setItem('lottery_viewed', 'true');
-	    }, 1000);
-	}
+		function closeLottery() {
+		    const stage = document.getElementById('lottery-stage');
+		    stage.style.transition = "opacity 0.8s text-center";
+		    stage.style.opacity = '0';
+
+		    setTimeout(() => {
+		        stage.style.display = 'none';
+		        // 【关键点3】写入缓存标记，这样刷新页面后 checkLottery 第一行就会拦截
+		        sessionStorage.setItem('lottery_viewed', 'true');
+		        console.log("已标记动画为看过状态");
+		    }, 800;
+		}
 		checkLottery();
         // 初期読み込み実行
         loadPhotos();
