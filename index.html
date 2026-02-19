@@ -42,7 +42,14 @@
     </style>
 </head>
 <body class="p-4 md:p-10">
-
+	<div id="lottery-overlay" class="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center hidden">
+	    <div id="shuffle-container" class="relative w-64 h-80 mb-10">
+	        </div>
+	    <div id="winner-announcement" class="text-center opacity-0 transition-opacity duration-1000">
+	        <h2 class="text-2xl font-bold text-pink-500 mb-2">🎉 ご当選おめでとうございます！ 🎉</h2>
+	        <p id="winner-id" class="text-lg text-gray-600 font-bold"></p>
+	    </div>
+	</div>
     <header class="text-center mb-10">
         <h1 class="text-3xl font-bold text-[#d87a80] mb-2">うちの子展示室</h1>
         <p class="text-xs text-gray-400 tracking-widest uppercase">RosenliaDoll Photo Gallery</p>
@@ -214,6 +221,79 @@
                 loader.style.display = 'none';
             }
         };
+        
+        // --- 抽選機能のメインロジック ---
+
+		// 1. 中選者のデータを取得してアニメーションを開始する
+		async function checkLottery() {
+		    // 最新の当選者1名を取得
+		    const { data, error } = await sbClient
+		        .from('lottery_results')
+		        .select('*')
+		        .order('draw_time', { ascending: false })
+		        .limit(1)
+		        .single();
+
+		    if (data) {
+		        // もし24小时以内の当選データであればアニメーションを表示
+		        const drawDate = new Date(data.draw_time);
+		        const now = new Date();
+		        if (now - drawDate < 24 * 60 * 60 * 1000) { 
+		            startShuffleAnimation(data);
+		        }
+		    }
+		}
+
+		// 2. シャッフルアニメーションの実装
+		async function startShuffleAnimation(winnerData) {
+		    const overlay = document.getElementById('lottery-overlay');
+		    const container = document.getElementById('shuffle-container');
+		    const announcement = document.getElementById('winner-announcement');
+		    const winnerIdText = document.getElementById('winner-id');
+
+		    overlay.classList.remove('hidden');
+
+		    // ギャラリーからランダムな画像を取得してシャッフル用にする
+		    const { data: allPhotos } = await sbClient.from('gallery').select('url').eq('is_approved', true).limit(10);
+		    
+		    // 画像カードを生成
+		    const cards = allPhotos.map(p => p.url);
+		    cards.push(winnerData.winner_url); // 最後に当選者の画像を追加
+
+		    for (let i = 0; i < 15; i++) {
+		        const img = document.createElement('img');
+		        img.src = cards[Math.floor(Math.random() * cards.length)];
+		        img.className = "absolute inset-0 w-full h-full object-cover rounded-xl shadow-2xl transition-all duration-200 transform";
+		        img.style.zIndex = i;
+		        container.appendChild(img);
+
+		        // シャッフル音の代わりにアニメーション遅延
+		        await new Promise(r => setTimeout(r, 150 + (i * 20)));
+		        
+		        if (i < 14) {
+		            img.style.opacity = "0"; // 前の画像を消す
+		        } else {
+		            // 最後の画像（当選者）を表示
+		            img.src = winnerData.winner_url;
+		            img.style.transform = "scale(1.2)";
+		            img.style.border = "5px solid #ff9a9e";
+		        }
+		    }
+
+		    // 当選メッセージ表示
+		    winnerIdText.innerText = `@${winnerData.winner_twitter} 様`;
+		    announcement.classList.remove('opacity-0');
+
+		    // 5秒後にフェードアウトして通常のギャラリーを見せる
+		    setTimeout(() => {
+		        overlay.style.transition = "opacity 1s";
+		        overlay.style.opacity = "0";
+		        setTimeout(() => overlay.classList.add('hidden'), 1000);
+		    }, 6000);
+		}
+
+		// 実行（loadPhotosの後に呼び出す）
+		checkLottery();
 
         // 初期読み込み実行
         loadPhotos();
