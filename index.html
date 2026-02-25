@@ -10,7 +10,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap');
         body { 
-            background-color: #fff9fa; 
+            background-color: #e6e6fc; 
             color: #5a5255; 
             font-family: 'Noto Sans JP', sans-serif; 
             margin: 0;
@@ -78,32 +78,32 @@
 	<div id="lottery-stage">
 	    <div id="winner-text" class="absolute bottom-20 w-full text-center opacity-0 transition-opacity duration-1000" style="z-index: 10001;">
 	        <h2 class="text-3xl font-bold text-white mb-2">🎉 ご当選おめでとうございます！ 🎉</h2>
-	        <p id="winner-id-display" class="text-xl text-pink-300 font-bold mb-6"></p>
-	        <button onclick="closeLottery()" class="px-10 py-3 bg-pink-500 text-white rounded-full font-bold shadow-lg hover:bg-pink-600 transition">
+	        <p id="winner-id-display" class="text-xl text-[#8378c3] font-bold mb-6"></p>
+	        <button onclick="closeLottery()" class="px-10 py-3 bg-[#8378c3] text-white rounded-full font-bold shadow-lg hover:bg-[#8a8ae0] transition">
 	            閉じる
 	        </button>
 	    </div>
 	</div>
     <header class="text-center mb-10">
-        <h1 class="text-3xl font-bold text-[#d87a80] mb-2">うちの子展示室</h1>
-        <p class="text-xs text-gray-400 tracking-widest uppercase">RosenliaDoll Photo Gallery</p>
+        <h1 class="text-3xl font-bold text-[#8378c3] mb-2">RosenliaDoll展示室</h1>
+        <p class="text-xs text-[#8378c3] tracking-widest uppercase">RosenliaDoll Photo Gallery</p>
     </header>
 
-    <section id="upload-section" class="max-w-xl mx-auto mb-16 bg-white border border-pink-100 rounded-3xl p-8 shadow-sm">
+    <section id="upload-section" class="max-w-xl mx-auto mb-16 bg-white border border-[#8378c3] rounded-3xl p-8 shadow-sm">
         <div class="text-center">
-            <h2 class="text-lg font-bold text-pink-600 mb-4">✨ フォトキャンペーン実施中 ✨</h2>
+            <h2 class="text-lg font-bold text-[#8378c3] mb-4">✨ フォトキャンペーン実施中 ✨</h2>
             <p class="text-sm text-gray-500 mb-6 leading-relaxed">
                 お写真を投稿いただいた方の中から、毎月抽選で<br>
                 新作アクセサリーをプレゼントいたします。
             </p>
             
             <div class="space-y-4">
-                <input type="text" id="twitter_id" placeholder="X (Twitter) ID (@なし)" 
-                       class="w-full border-b-2 border-pink-50 py-2 px-4 focus:outline-none focus:border-pink-300 text-center">
+                <input type="text" id="twitter_id" placeholder="X (Twitter) ID (@abc)" 
+                       class="w-full border-b-2 border-pink-50 py-2 px-4 focus:outline-none focus:border-[#8378c3] text-center">
                 
                 <input type="file" id="file_input" accept="image/*" class="hidden">
                 <button onclick="document.getElementById('file_input').click()" 
-                        class="w-full bg-pink-400 hover:bg-pink-500 text-white font-bold py-3 rounded-full shadow-lg transition duration-300">
+                        class="w-full bg-[#8378c3] hover:bg-[#8a8ae0] text-white font-bold py-3 rounded-full shadow-lg transition duration-300">
                     写真を投稿する
                 </button>
                 
@@ -117,10 +117,9 @@
         </div>
     </section>
 
-    <div id="gallery" class="masonry max-w-7xl mx-auto">
-        </div>
+    <div id="gallery" class="masonry max-w-7xl mx-auto"></div>
 
-    <footer class="mt-20 py-10 border-t border-pink-50 text-center text-gray-400 text-[10px]">
+    <footer class="mt-20 py-10 border-t border-[#8378c3] text-center text-gray-400 text-[10px]">
         <p>&copy; 2026 RosenliaDoll. All Rights Reserved.</p>
     </footer>
 
@@ -164,10 +163,10 @@
             if (data) {
                 const galleryDiv = document.getElementById('gallery');
                 galleryDiv.innerHTML = data.map(item => `
-                    <div class="masonry-item">
+                    <div class="masonry-item bg-[#f2f2fc]">
                         <img src="${item.url}" class="w-full h-auto block" loading="lazy">
-                        <div class="p-3 flex justify-between items-center bg-white">
-                            <span class="text-[10px] font-bold text-gray-400">Owner: @${item.twitter_id || '匿名'}</span>
+                        <div class="p-3 flex justify-between items-center bg-[#f2f2fc]">
+                            <span class="text-[10px] font-bold text-[#8a8ae0]">Owner: @${item.twitter_id || '匿名'}</span>
                             <span class="text-[9px] text-gray-300">${item.file_size ? item.file_size + 'KB' : ''}</span>
                         </div>
                     </div>
