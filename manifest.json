@@ -1,6 +1,6 @@
 {
   "name": "Rosenlia Doll Gallery",
-  "short_name": "RosenliaDoll",
+  "short_name": "RosenliaDoll展示室",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fff9fa",
