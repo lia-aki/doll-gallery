@@ -113,6 +113,13 @@
             <div class="space-y-4">
                 <input type="text" id="twitter_id" placeholder="X (Twitter) ID (@abc)" 
                        class="w-full border-b-2 border-pink-50 py-2 px-4 focus:outline-none focus:border-[#8378c3] text-center">
+                <select id="category_select" 
+				        class="w-full border-b-2 border-pink-50 py-2 px-4 focus:outline-none focus:border-[#8378c3] text-center bg-white text-gray-500 mt-4">
+				    <option value="" disabled selected>カテゴリーを選択してください</option>
+				    <option value="お洋服">お洋服</option>
+				    <option value="ウィッグ">ウィッグ</option>
+				    <option value="ドールヘッド">ドールヘッド</option>
+				</select>
                 
                 <input type="file" id="file_input" accept="image/*" class="hidden">
                 <button onclick="document.getElementById('file_input').click()" 
@@ -162,10 +169,24 @@
 
 		    if (data && data.value === false) {
 		        uploadSection.style.display = 'none';
-		    } else {
-		        uploadSection.style.display = 'block';
-		    }
-		}
+		        const endMessage = document.createElement('div');
+		        endMessage.id = 'end-message';
+		        endMessage.className = 'max-w-xl mx-auto mb-16 text-center p-8 border border-dashed border-[#8378c3] rounded-3xl';
+		        endMessage.innerHTML = `
+	            <p class="text-[#8378c3] font-bold">✨ 当期投稿は終了いたしました ✨</p>
+	            <p class="text-xs text-gray-400 mt-2">次回の開催をどうぞ楽しみにお待ちください。</p>
+       			 `;
+        
+		        // 防止重复插入提示
+		        if (!document.getElementById('end-message')) {
+		            uploadSection.parentNode.insertBefore(endMessage, uploadSection);
+		        }
+			 } else {
+			        uploadSection.style.display = 'block';
+			        const existingMessage = document.getElementById('end-message');
+		        	if (existingMessage) existingMessage.remove();
+			    }
+			}
 
         // 1. ギャラリーの読み込み (Load Photos)
         async function loadPhotos() {
@@ -183,6 +204,7 @@
                         <img src="${item.url}" class="w-full h-auto block" loading="lazy">
                         <div class="p-3 flex justify-between items-center bg-[#f2f2fc]">
                             <span class="text-[10px] font-bold text-[#8a8ae0]">Owner: @${item.twitter_id || '匿名'}</span>
+                            <span class="text-[9px] text-gray-400">${item.category || ''}</span>
                             <span class="text-[9px] text-gray-300">${item.file_size ? item.file_size + 'KB' : ''}</span>
                         </div>
                     </div>
@@ -250,10 +272,12 @@
 
                 // D. データベースへ登録
                 const twitterId = twitterInput.value || 'Anonymous';
+                const category = document.getElementById('category_select').value || '未分類';
                 const { error: dbError } = await myAppClient.from('gallery').insert([
                     { 
                         url: urlData.publicUrl, 
                         twitter_id: twitterId, 
+                        category: category,
                         is_approved: false,
                         file_size: fileSizeKB 
                     }
@@ -263,6 +287,7 @@
 
                 statusText.innerText = '投稿が完了しました！承認をお待ちください。';
                 twitterInput.value = ''; // 入力欄をクリア
+                document.getElementById('category_select').value = '';
             } catch (err) {
                 console.error(err);
                 statusText.innerText = 'エラーが発生しました: ' + (err.message || '通信失敗');
