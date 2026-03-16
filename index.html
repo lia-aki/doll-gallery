@@ -106,7 +106,7 @@
         <div class="text-center">
             <h2 class="text-lg font-bold text-[#8378c3] mb-4">✨ フォトキャンペーン実施中 ✨</h2>
             <p class="text-sm text-gray-500 mb-6 leading-relaxed">
-                お写真を投稿いただいた方の中から、毎月抽選で<br>
+                お写真を投稿いただいた方の中から、抽選で<br>
                 プレゼントいたします。
             </p>
             
@@ -118,7 +118,7 @@
 				    <option value="" disabled selected>カテゴリーを選択してください</option>
 				    <option value="お洋服">お洋服</option>
 				    <option value="ウィッグ">ウィッグ</option>
-				    <option value="ドールヘッド">ドールヘッド</option>
+				    <option value="ドールヘッド">りあっ娘</option>
 				</select>
                 
                 <input type="file" id="file_input" accept="image/*" class="hidden">
@@ -138,6 +138,26 @@
 				</div>
             </div>
         </div>
+        <div id="campaign-notes" class="mt-8 pt-6 border-t border-pink-50 text-left">
+		    <div class="mb-6">
+		        <h3 class="text-xs font-bold text-[#8378c3] mb-2">【募集対象】</h3>
+		        <p class="text-[11px] text-gray-500 leading-relaxed">
+		            RosenliaDollの作品（りあっ娘・お洋服・ウィッグ）が主役となるお写真を歓迎しております💓<br>
+		            どちらか一つでもご参加いただけます…✨
+		        </p>
+		    </div>
+		    
+		    <div>
+		        <h3 class="text-xs font-bold text-[#8378c3] mb-2">【注意事項】</h3>
+		        <ul class="text-[10px] text-gray-400 space-y-1 list-disc ml-4 leading-relaxed">
+		            <li>投稿されるお写真は、投稿者ご本人が撮影したもの、または投稿の許可を得ているものに限ります。</li>
+		            <li>投稿していただいたお写真はRosenliaDollのウェブサイト、SNSまたはイベントにてご展示させていただく場合がございます。</li>
+		            <li>公序良俗に反する内容、または企画の趣旨に合わないと判断した場合、掲載を見送らせていただく場合がございます。</li>
+		            <li>本企画は予告なく内容を変更または終了する場合がございます。</li>
+		            <li>抽選結果はX（旧Twitter）のDM、または投稿時に記載されたアカウントへのご連絡をもってお知らせいたします。</li>
+		        </ul>
+		    </div>
+		</div>
     </section>
 
     <div id="gallery" class="masonry max-w-7xl mx-auto"></div>
@@ -204,8 +224,7 @@
                         <img src="${item.url}" class="w-full h-auto block" loading="lazy">
                         <div class="p-3 flex justify-between items-center bg-[#f2f2fc]">
                             <span class="text-[10px] font-bold text-[#8a8ae0]">Owner: @${item.twitter_id || '匿名'}</span>
-                            <span class="text-[9px] text-gray-400">${item.category || ''}</span>
-                            <span class="text-[9px] text-gray-300">${item.file_size ? item.file_size + 'KB' : ''}</span>
+                            <span class="text-[9px] text-[#8a8ae0]">${item.category || ''}</span>
                         </div>
                     </div>
                 `).join('');
