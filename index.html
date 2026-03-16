@@ -72,6 +72,11 @@
             border: 6px solid #ff9a9e;
             box-shadow: 0 0 50px rgba(255, 154, 158, 0.8);
         }
+        .category-chip.active {
+		    background-color: #8378c3;
+		    color: white;
+		    box-shadow: 0 4px 10px rgba(131, 120, 195, 0.3);
+		}
     </style>
 </head>
 <body class="p-4 md:p-10">
@@ -110,13 +115,23 @@
             <div class="space-y-4">
                 <input type="text" id="twitter_id" placeholder="X (Twitter) ID を記入してください" 
                        class="w-full border-b-2 border-pink-50 py-2 px-4 focus:outline-none focus:border-[#8378c3] text-center">
-                <select id="category_select" 
-                        class="w-full border-b-2 border-pink-50 py-2 px-4 focus:outline-none focus:border-[#8378c3] text-center bg-white text-gray-500 mt-4">
-                    <option value="" disabled selected>カテゴリーを選択してください</option>
-                    <option value="お洋服">お洋服</option>
-                    <option value="ウィッグ">ウィッグ</option>
-                    <option value="りあっ娘">りあっ娘</option>
-                </select>
+                               <div class="w-full mt-4">
+				    <p class="text-[11px] text-gray-400 mb-2 text-center font-bold">カテゴリー（複数選択可）</p>
+				    <div id="category_container" class="flex flex-wrap justify-center gap-2">
+				        <button type="button" onclick="toggleCategory(this)" data-value="お洋服" 
+				            class="category-chip px-4 py-1.5 rounded-full border border-[#8378c3] text-[#8378c3] text-xs transition-all">
+				            お洋服
+				        </button>
+				        <button type="button" onclick="toggleCategory(this)" data-value="ウィッグ" 
+				            class="category-chip px-4 py-1.5 rounded-full border border-[#8378c3] text-[#8378c3] text-xs transition-all">
+				            ウィッグ
+				        </button>
+				        <button type="button" onclick="toggleCategory(this)" data-value="ドールヘッド" 
+				            class="category-chip px-4 py-1.5 rounded-full border border-[#8378c3] text-[#8378c3] text-xs transition-all">
+				            りあっ娘
+				        </button>
+				    </div>
+				</div>
                 <input type="file" id="file_input" accept="image/*" class="hidden">
                 <div id="preview-container" class="hidden mt-4 mb-4">
 				    <p class="text-[10px] text-gray-400 mb-2">プレビュー:</p>
@@ -302,12 +317,29 @@
 		    }
         };
         
+        // 選択されたカテゴリーを保持する配列
+		let selectedCategories = [];
+
+		// ラベルのクリック時の切り替え
+		function toggleCategory(el) {
+		    const value = el.getAttribute('data-value');
+		    
+		    if (selectedCategories.includes(value)) {
+		        // すでに選択されていれば解除
+		        selectedCategories = selectedCategories.filter(c => c !== value);
+		        el.classList.remove('active');
+		    } else {
+		        // 選択されていなければ追加
+		        selectedCategories.push(value);
+		        el.classList.add('active');
+		    }
+		}
+        
         // 2. 「確定ボタン」が押された時の最終アップロード処理
 		async function handleFinalUpload() {
 		    if (!selectedFileBlob) return;
 
 			const twitterId = twitterInput.value.trim();
-		    const category = document.getElementById('category_select').value;
 
 		    if (!twitterId) {
 		        alert("X (Twitter) IDを入力してください。");
@@ -315,9 +347,8 @@
 		        return;
 		    }
 
-		    if (!category) {
+		    if (selectedCategories.length === 0) {
 		        alert("カテゴリーを選択してください。");
-		        document.getElementById('category_select').focus();
 		        return;
 		    }
     
@@ -340,12 +371,12 @@
 
 		        // DBへ登録
 		        const twitterId = twitterInput.value || 'Anonymous';
-		        const category = document.getElementById('category_select').value || '未分類';
+		        const categoryString = selectedCategories.join(', ');
 
 		        const { error: dbError } = await myAppClient.from('gallery').insert([{ 
 		            url: urlData.publicUrl, 
 		            twitter_id: twitterId, 
-		            category: category, 
+		            category: categoryString, 
 		            is_approved: false, 
 		            file_size: fileSizeKB 
 		        }]);
@@ -370,7 +401,8 @@
 		// フォームリセット用関数
 		function resetUploadForm() {
 		    twitterInput.value = '';
-		    document.getElementById('category_select').value = '';
+		    selectedCategories = [];
+		    document.querySelectorAll('.category-chip').forEach(chip => chip.classList.remove('active'));
 		    fileInput.value = '';
 		    selectedFileBlob = null;
 		    previewContainer.classList.add('hidden');
