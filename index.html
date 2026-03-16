@@ -43,62 +43,60 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* 抽奖容器：全屏透明，背景模糊 */
-	#lottery-stage {
-	    position: fixed;
-	    inset: 0;
-	    z-index: 9999; /* 必须是最大，确保盖在图片墙上 */
-	    background: rgba(0, 0, 0, 0.75); /* 深色透明背景，突出中奖图 */
-	    backdrop-filter: blur(8px); /* 背景模糊感 */
-	    display: none; /* 初始隐藏 */
-	    align-items: center;
-	    justify-content: center;
-	}
+        #lottery-stage {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
 
-	.vortex-item {
-	    position: absolute;
-	    width: 140px;
-	    height: 140px;
-	    object-fit: cover;
-	    border-radius: 15px;
-	    transition: all 2.5s cubic-bezier(0.19, 1, 0.22, 1);
-	    pointer-events: none; /* 防止遮挡点击事件 */
-	}
+        .vortex-item {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 15px;
+            transition: all 2.5s cubic-bezier(0.19, 1, 0.22, 1);
+            pointer-events: none;
+        }
 
-	.winner-final {
-	    /* 最终定格位置强制在中心 */
-	    left: 50% !important;
-	    top: 45% !important;
-	    transform: translate(-50%, -50%) scale(2.2) !important;
-	    z-index: 10000;
-	    border: 6px solid #ff9a9e;
-	    box-shadow: 0 0 50px rgba(255, 154, 158, 0.8);
-	}
+        .winner-final {
+            left: 50% !important;
+            top: 45% !important;
+            transform: translate(-50%, -50%) scale(2.2) !important;
+            z-index: 10000;
+            border: 6px solid #ff9a9e;
+            box-shadow: 0 0 50px rgba(255, 154, 158, 0.8);
+        }
     </style>
 </head>
 <body class="p-4 md:p-10">
-	<div id="lottery-stage">
-	    <div id="winner-text" class="absolute bottom-20 w-full text-center opacity-0 transition-opacity duration-1000" style="z-index: 10001;">
-	        <h2 class="text-3xl font-bold text-white mb-2">🎉 ご当選おめでとうございます！ 🎉</h2>
-	        <p id="winner-id-display" class="text-xl text-[#8378c3] font-bold mb-6"></p>
-	        <button onclick="closeLottery()" class="px-10 py-3 bg-[#8378c3] text-white rounded-full font-bold shadow-lg hover:bg-[#8a8ae0] transition">
-	            閉じる
-	        </button>
-	    </div>
-	</div>
-    <header class="text-center mb-10">
-    	<div class="flex justify-center items-center max-w-full overflow-hidden">
-	    	<img src="https://eiladnaqqcddtkfqypvb.supabase.co/storage/v1/object/public/event-pictures/momorin.png" alt="Logo" class="h-12 w-auto">
-	        <div id="title-container" style="flex: 1 1 auto; max-width: 270px; min-width: 0;">
-	            <svg viewBox="0 0 270 40" class="w-full h-auto block">
-	                <text x="43%" y="50%" dominant-baseline="central" text-anchor="middle" 
-	                      font-family="'Noto Sans JP', sans-serif" font-weight="700" fill="#8378c3" style="font-size: 25px;">
-	                    RosenliaDoll展示室
-	                </text>
-	            </svg>
-	        </div>
-	    </div>
+    <div id="lottery-stage">
+        <div id="winner-text" class="absolute bottom-20 w-full text-center opacity-0 transition-opacity duration-1000" style="z-index: 10001;">
+            <h2 class="text-3xl font-bold text-white mb-2">🎉 ご当選おめでとうございます！ 🎉</h2>
+            <p id="winner-id-display" class="text-xl text-[#8378c3] font-bold mb-6"></p>
+            <button onclick="closeLottery()" class="px-10 py-3 bg-[#8378c3] text-white rounded-full font-bold shadow-lg hover:bg-[#8a8ae0] transition">
+                閉じる
+            </button>
+        </div>
+    </div>
 
+    <header class="text-center mb-10">
+        <div class="flex justify-center items-center max-w-full overflow-hidden">
+            <img src="https://eiladnaqqcddtkfqypvb.supabase.co/storage/v1/object/public/event-pictures/momorin.png" alt="Logo" class="h-12 w-auto">
+            <div id="title-container" style="flex: 1 1 auto; max-width: 270px; min-width: 0;">
+                <svg viewBox="0 0 270 40" class="w-full h-auto block">
+                    <text x="43%" y="50%" dominant-baseline="central" text-anchor="middle" 
+                          font-family="'Noto Sans JP', sans-serif" font-weight="700" fill="#8378c3" style="font-size: 25px;">
+                        RosenliaDoll展示室
+                    </text>
+                </svg>
+            </div>
+        </div>
         <p class="text-xs text-[#8378c3] tracking-widest uppercase">RosenliaDoll Photo Gallery</p>
     </header>
 
@@ -109,55 +107,52 @@
                 お写真を投稿いただいた方の中から、抽選で<br>
                 プレゼントいたします。
             </p>
-            
             <div class="space-y-4">
                 <input type="text" id="twitter_id" placeholder="X (Twitter) ID (@abc)" 
                        class="w-full border-b-2 border-pink-50 py-2 px-4 focus:outline-none focus:border-[#8378c3] text-center">
                 <select id="category_select" 
-				        class="w-full border-b-2 border-pink-50 py-2 px-4 focus:outline-none focus:border-[#8378c3] text-center bg-white text-gray-500 mt-4">
-				    <option value="" disabled selected>カテゴリーを選択してください</option>
-				    <option value="お洋服">お洋服</option>
-				    <option value="ウィッグ">ウィッグ</option>
-				    <option value="ドールヘッド">りあっ娘</option>
-				</select>
-                
+                        class="w-full border-b-2 border-pink-50 py-2 px-4 focus:outline-none focus:border-[#8378c3] text-center bg-white text-gray-500 mt-4">
+                    <option value="" disabled selected>カテゴリーを選択してください</option>
+                    <option value="お洋服">お洋服</option>
+                    <option value="ウィッグ">ウィッグ</option>
+                    <option value="ドールヘッド">りあっ娘</option>
+                </select>
                 <input type="file" id="file_input" accept="image/*" class="hidden">
                 <button onclick="document.getElementById('file_input').click()" 
                         class="w-full bg-[#8378c3] hover:bg-[#8a8ae0] text-white font-bold py-3 rounded-full shadow-lg transition duration-300">
                     写真を投稿する
                 </button>
-                
                 <div id="loader" class="loading-spinner"></div>
                 <div id="status" class="text-xs text-pink-400 mt-2"></div>
                 <div class="text-center mt-4">
-				    <p class="text-[10px] text-gray-400 inline-block text-left leading-relaxed">
-				        ※投稿された写真は運営の承認後に反映されます。<br>
-				        ※大きな画像は自動的に最適化（圧縮）されます。<br>
-				        ※本サイト上でのお支払い、金銭のやり取りは一切発生いたしません。
-				    </p>
-				</div>
+                    <p class="text-[10px] text-gray-400 inline-block text-left leading-relaxed">
+                        ※投稿された写真は運営の承認後に反映されます。<br>
+                        ※大きな画像は自動的に最適化（圧縮）されます。<br>
+                        ※本サイト上でのお支払い、金銭েরやり取りは一切発生いたしません。
+                    </p>
+                </div>
             </div>
         </div>
+
         <div id="campaign-notes" class="mt-8 pt-6 border-t border-pink-50 text-left">
-		    <div class="mb-6">
-		        <h3 class="text-xs font-bold text-[#8378c3] mb-2">【募集対象】</h3>
-		        <p class="text-[11px] text-gray-500 leading-relaxed">
-		            RosenliaDollの作品（りあっ娘・お洋服・ウィッグ）が主役となるお写真を歓迎しております💓<br>
-		            どちらか一つでもご参加いただけます…✨
-		        </p>
-		    </div>
-		    
-		    <div>
-		        <h3 class="text-xs font-bold text-[#8378c3] mb-2">【注意事項】</h3>
-		        <ul class="text-[10px] text-gray-400 space-y-1 list-disc ml-4 leading-relaxed">
-		            <li>投稿されるお写真は、投稿者ご本人が撮影したもの、または投稿の許可を得ているものに限ります。</li>
-		            <li>投稿していただいたお写真はRosenliaDollのウェブサイト、SNSまたはイベントにてご展示させていただく場合がございます。</li>
-		            <li>公序良俗に反する内容、または企画の趣旨に合わないと判断した場合、掲載を見送らせていただく場合がございます。</li>
-		            <li>本企画は予告なく内容を変更または終了する場合がございます。</li>
-		            <li>抽選結果はX（旧Twitter）のDM、または投稿時に記載されたアカウントへのご連絡をもってお知らせいたします。</li>
-		        </ul>
-		    </div>
-		</div>
+            <div class="mb-6">
+                <h3 class="text-xs font-bold text-[#8378c3] mb-2">【募集対象】</h3>
+                <p class="text-[11px] text-gray-500 leading-relaxed">
+                    RosenliaDollの作品（りあっ娘・お洋服・ウィッグ）が主役となるお写真を歓迎しております💓<br>
+                    どちらか一つでもご参加いただけます…✨
+                </p>
+            </div>
+            <div>
+                <h3 class="text-xs font-bold text-[#8378c3] mb-2">【注意事項】</h3>
+                <ul class="text-[10px] text-gray-400 space-y-1 list-disc ml-4 leading-relaxed">
+                    <li>投稿されるお写真は、投稿者ご本人が撮影したもの、または投稿の許可を得ているものに限ります。</li>
+                    <li>投稿していただいたお写真はRosenliaDollのウェブサイト、SNSまたはイベントにてご展示させていただく場合がございます。</li>
+                    <li>公序良俗に反する内容、または企画の趣旨に合わないと判断した場合、掲載を見送らせていただく場合がございます。</li>
+                    <li>本企画は予告なく内容を変更または終了する場合がございます。</li>
+                    <li>抽選結果はX（旧Twitter）のDM、または投稿時に記載されたアカウントへのご連絡をもってお知らせいたします。</li>
+                </ul>
+            </div>
+        </div>
     </section>
 
     <div id="gallery" class="masonry max-w-7xl mx-auto"></div>
@@ -167,56 +162,39 @@
     </footer>
 
     <script>
-        // --- 設定エリア (ここをあなたの情報に書き換えてください) ---
         const SB_URL = 'https://eiladnaqqcddtkfqypvb.supabase.co'; 
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbGFkbmFxcWNkZHRrZnF5cHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNTI1MjAsImV4cCI6MjA4NjkyODUyMH0.ypTl6LS3wvjc_24-eCNOxvvZVOAQ6F_PGhoXfHWW8pY'; // 此处替换为你的 Anon Key
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbGFkbmFxcWNkZHRrZnF5cHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNTI1MjAsImV4cCI6MjA4NjkyODUyMH0.ypTl6LS3wvjc_24-eCNOxvvZVOAQ6F_PGhoXfHWW8pY'; 
         const myAppClient = supabase.createClient(SB_URL, SB_KEY);
 
         const fileInput = document.getElementById('file_input');
         const statusText = document.getElementById('status');
         const loader = document.getElementById('loader');
         const twitterInput = document.getElementById('twitter_id');
-
-		// 投稿できるかをコントロール
-		async function checkUploadStatus() {
-		    const { data, error } = await myAppClient
-		        .from('settings')
-		        .select('value')
-		        .eq('key', 'is_upload_enabled')
-		        .single();
-
-		    const uploadSection = document.getElementById('upload-section');
-
-		    if (data && data.value === false) {
-		        uploadSection.style.display = 'none';
-		        const endMessage = document.createElement('div');
-		        endMessage.id = 'end-message';
-		        endMessage.className = 'max-w-xl mx-auto mb-16 text-center p-8 border border-dashed border-[#8378c3] rounded-3xl';
-		        endMessage.innerHTML = `
-	            <p class="text-[#8378c3] font-bold">✨ 当期投稿は終了いたしました ✨</p>
-	            <p class="text-xs text-gray-400 mt-2">次回の開催をどうぞ楽しみにお待ちください。</p>
-       			 `;
         
-		        // 防止重复插入提示
-		        if (!document.getElementById('end-message')) {
-		            uploadSection.parentNode.insertBefore(endMessage, uploadSection);
-		        }
-			 } else {
-			        uploadSection.style.display = 'block';
-			        const existingMessage = document.getElementById('end-message');
-		        	if (existingMessage) existingMessage.remove();
-			    }
-			}
+        // 全局回调
+        let currentOnFinished = null;
 
-        // 1. ギャラリーの読み込み (Load Photos)
+        async function checkUploadStatus() {
+            const { data } = await myAppClient.from('settings').select('value').eq('key', 'is_upload_enabled').single();
+            const uploadSection = document.getElementById('upload-section');
+            if (data && data.value === false) {
+                uploadSection.style.display = 'none';
+                const endMessage = document.createElement('div');
+                endMessage.id = 'end-message';
+                endMessage.className = 'max-w-xl mx-auto mb-16 text-center p-8 border border-dashed border-[#8378c3] rounded-3xl';
+                endMessage.innerHTML = `<p class="text-[#8378c3] font-bold">✨ 当期投稿は終了いたしました ✨</p><p class="text-xs text-gray-400 mt-2">次回の開催をどうぞ楽しみにお待ちください。</p>`;
+                if (!document.getElementById('end-message')) {
+                    uploadSection.parentNode.insertBefore(endMessage, uploadSection);
+                }
+            } else {
+                uploadSection.style.display = 'block';
+                const existingMessage = document.getElementById('end-message');
+                if (existingMessage) existingMessage.remove();
+            }
+        }
+
         async function loadPhotos() {
-        
-            const { data, error } = await myAppClient
-                .from('gallery')
-                .select('*')
-                .eq('is_approved', true) // 承認済みのみ
-                .order('created_at', { ascending: false });
-
+            const { data } = await myAppClient.from('gallery').select('*').eq('is_approved', true).order('created_at', { ascending: false });
             if (data) {
                 const galleryDiv = document.getElementById('gallery');
                 galleryDiv.innerHTML = data.map(item => `
@@ -231,7 +209,6 @@
             }
         }
 
-        // 2. 画像圧縮ロジック (Image Compression)
         const compressImage = (file) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -241,216 +218,144 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 1200; // 展示用には1200pxで十分
-                        let width = img.width;
-                        let height = img.height;
-
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
+                        const MAX_WIDTH = 1200;
+                        let width = img.width, height = img.height;
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        
-                        canvas.toBlob((blob) => {
-                            resolve(blob);
-                        }, 'image/jpeg', 0.8); // 80%の画質で圧縮
+                        canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', 0.8);
                     };
                 };
             });
         };
 
-        // 3. 投稿処理 (Upload Logic)
         fileInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
-            // ローディング開始
             loader.style.display = 'block';
             statusText.innerText = '画像を最適化中...';
-
             try {
-                // A. 圧縮
                 const compressedBlob = await compressImage(file);
                 const fileSizeKB = (compressedBlob.size / 1024).toFixed(1);
                 const fileName = `${Date.now()}.jpg`;
-
                 statusText.innerText = 'アップロード中...';
-
-                // B. Storageへアップロード
-                const { data: uploadData, error: uploadError } = await myAppClient.storage
-                    .from('photos')
-                    .upload(fileName, compressedBlob);
-
+                const { error: uploadError } = await myAppClient.storage.from('photos').upload(fileName, compressedBlob);
                 if (uploadError) throw uploadError;
-
-                // C. 公開URL取得
                 const { data: urlData } = myAppClient.storage.from('photos').getPublicUrl(fileName);
-
-                // D. データベースへ登録
                 const twitterId = twitterInput.value || 'Anonymous';
                 const category = document.getElementById('category_select').value || '未分類';
-                const { error: dbError } = await myAppClient.from('gallery').insert([
-                    { 
-                        url: urlData.publicUrl, 
-                        twitter_id: twitterId, 
-                        category: category,
-                        is_approved: false,
-                        file_size: fileSizeKB 
-                    }
-                ]);
-
+                const { error: dbError } = await myAppClient.from('gallery').insert([{ 
+                    url: urlData.publicUrl, twitter_id: twitterId, category: category, is_approved: false, file_size: fileSizeKB 
+                }]);
                 if (dbError) throw dbError;
-
                 statusText.innerText = '投稿が完了しました！承認をお待ちください。';
-                twitterInput.value = ''; // 入力欄をクリア
+                twitterInput.value = '';
                 document.getElementById('category_select').value = '';
             } catch (err) {
-                console.error(err);
                 statusText.innerText = 'エラーが発生しました: ' + (err.message || '通信失敗');
             } finally {
                 loader.style.display = 'none';
             }
         };
-        
-        // --- 抽選機能のメインロジック ---
 
-		// 1. 中選者のデータを取得してアニメーションを開始する
-		async function checkLottery() {
-		    // 【关键点1】检查浏览器缓存，如果本轮会话已看过，直接拦截，不执行后续逻辑
-		    //if (sessionStorage.getItem('lottery_viewed') === 'true') {
-		        //console.log("抽奖动画本轮已播放过，跳过");
-		        //return;
-		    //}
+        // --- 抽奖核心逻辑修复版 ---
 
-		    // 【关键点2】只获取 flag 为 true 的最新中奖信息
-		    const { data, error } = await myAppClient
-		        .from('lottery_results')
-		        .select('*')
-		        .eq('flag', true) 
-		        .order('draw_time', { ascending: false })
-		        .limit(3)
-		        .single();
+        async function checkLottery() {
+            const { data } = await myAppClient
+                .from('lottery_results')
+                .select('*')
+                .eq('flag', true) 
+                .order('draw_time', { ascending: false })
+                .limit(3);
+            
+            if (data && data.length > 0) {
+                let currentIndex = 0;
+                const playNext = () => {
+                    if (currentIndex < data.length) {
+                        startVortexAnimation(data[currentIndex], () => {
+                            currentIndex++;
+                            playNext();
+                        });
+                    }
+                };
+                playNext();
+            }
+        }
 
-		    //if (data) {
-		        // 只有存在 true 的数据且符合时间要求（可选）才播放
-		        //console.log("发现中奖者，准备播放动画:", data);
-		       // startVortexAnimation(data);
-		   // }
-		   
-		   if (data && data.length > 0) {
-		        // 定义一个播放队列
-		        let currentIndex = 0;
+        async function startVortexAnimation(winnerData, onFinished) {
+            currentOnFinished = onFinished;
+            const stage = document.getElementById('lottery-stage');
+            if (!stage) return;
 
-		        const playNext = () => {
-		            if (currentIndex < data.length) {
-		                // 播放当前这一个
-		                startVortexAnimation(data[currentIndex], () => {
-		                    // 当用户点击“关闭”时，回调这个函数播放下一个
-		                    currentIndex++;
-		                    if (currentIndex < data.length) {
-		                        playNext();
-		                    } else {
-		                        // 全部播完，标记为看过
-		                        sessionStorage.setItem('lottery_viewed', 'true');
-		                    }
-		                });
-		            }
-		        };
+            stage.style.display = 'flex';
+            stage.style.opacity = '1';
 
-		        playNext();
-		    }
-		}
+            const { data: photos } = await myAppClient.from('gallery').select('url').limit(15);
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
 
-	async function startVortexAnimation(winnerData) {
-	    const stage = document.getElementById('lottery-stage');
-	    if (!stage) return;
-
-	    // 强制显示舞台
-	    stage.style.display = 'block';
-	    stage.style.opacity = '1';
-
-	    // 获取素材（用于漩涡的碎片）
-	    const { data: photos } = await myAppClient.from('gallery').select('url').limit(15);
-	    const centerX = window.innerWidth / 2;
-	    const centerY = window.innerHeight / 2;
-
-	    // 清空舞台（防止重复触发导致卡顿）
-	    const oldItems = stage.querySelectorAll('.vortex-item');
-	    oldItems.forEach(el => el.remove());
-
-	    const items = [];
-	    const count = 20; // 碎片数量
-
-	    for (let i = 0; i < count; i++) {
-	        const img = document.createElement('img');
-	        // 如果是最后一个，则是真正的中奖图
-	        const isWinner = (i === count - 1);
-	        img.src = isWinner ? winnerData.winner_url : (photos[i % photos.length]?.url || winnerData.winner_url);
-	        img.className = 'vortex-item';
-	        
-	        // 初始位置：屏幕外的圆周
-	        const angle = Math.random() * Math.PI * 2;
-	        const radius = Math.max(window.innerWidth, window.innerHeight);
-	        img.style.left = `${centerX + Math.cos(angle) * radius}px`;
-	        img.style.top = `${centerY + Math.sin(angle) * radius}px`;
-	        img.style.zIndex = isWinner ? "110" : "105";
-	        
-	        stage.appendChild(img);
-	        items.push({ el: img, isWinner: isWinner });
-	    }
-
-	    // 启动动画：延迟 100ms 确保浏览器已渲染初始位置
-	    setTimeout(() => {
-	        items.forEach((item) => {
-	            if (item.isWinner) {
-	                // 中奖图定格中心
-	                item.el.classList.add('winner-final');
-	                item.el.style.left = '50%';
-	                item.el.style.top = '45%';
-	            } else {
-	                // 普通碎片向中心旋转并消失
-	                item.el.style.left = `${centerX}px`;
-	                item.el.style.top = `${centerY}px`;
-	                item.el.style.transform = `rotate(${720 + Math.random() * 1000}deg) scale(0)`;
-	                item.el.style.opacity = '0';
-	            }
-	        });
-	        
-	        // 显示文字
-	        setTimeout(() => {
-	            document.getElementById('winner-id-display').innerText = `@${winnerData.winner_twitter} 様`;
-	            document.getElementById('winner-text').style.opacity = '1';
-	        }, 2000);
-	    }, 100);
-	}
-
-		function closeLottery() {
-		    const stage = document.getElementById('lottery-stage');
-		    stage.style.transition = "opacity 0.8s text-center";
-		    stage.style.opacity = '0';
-
-		    setTimeout(() => {
-		        //stage.style.display = 'none';
-		        // 【关键点3】写入缓存标记，这样刷新页面后 checkLottery 第一行就会拦截
-		        //sessionStorage.setItem('lottery_viewed', 'true');
-		       // console.log("已标记动画为看过状态");
-		       stage.style.display = 'none';
-            // 清空旧的碎片和文字状态，为下一个中奖者腾地方
-            document.getElementById('winner-text').style.opacity = '0';
             const oldItems = stage.querySelectorAll('.vortex-item');
             oldItems.forEach(el => el.remove());
-            
-            // 执行回调，通知播放下一个
-            if (onFinished) onFinished();
-		    }, 800);
-		}
-		checkLottery();
-        // 初期読み込み実行
+
+            const items = [];
+            const count = 20; 
+
+            for (let i = 0; i < count; i++) {
+                const img = document.createElement('img');
+                const isWinner = (i === count - 1);
+                img.src = isWinner ? winnerData.winner_url : (photos[i % (photos?.length || 1)]?.url || winnerData.winner_url);
+                img.className = 'vortex-item';
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.max(window.innerWidth, window.innerHeight);
+                img.style.left = `${centerX + Math.cos(angle) * radius}px`;
+                img.style.top = `${centerY + Math.sin(angle) * radius}px`;
+                img.style.zIndex = isWinner ? "110" : "105";
+                stage.appendChild(img);
+                items.push({ el: img, isWinner: isWinner });
+            }
+
+            setTimeout(() => {
+                items.forEach((item) => {
+                    if (item.isWinner) {
+                        item.el.classList.add('winner-final');
+                    } else {
+                        item.el.style.left = `${centerX}px`;
+                        item.el.style.top = `${centerY}px`;
+                        item.el.style.transform = `rotate(${720 + Math.random() * 1000}deg) scale(0)`;
+                        item.el.style.opacity = '0';
+                    }
+                });
+                setTimeout(() => {
+                    document.getElementById('winner-id-display').innerText = `@${winnerData.winner_twitter} 様`;
+                    document.getElementById('winner-text').style.opacity = '1';
+                }, 2000);
+            }, 100);
+        }
+
+        function closeLottery() {
+            const stage = document.getElementById('lottery-stage');
+            stage.style.transition = "opacity 0.8s";
+            stage.style.opacity = '0';
+
+            setTimeout(() => {
+                stage.style.display = 'none';
+                document.getElementById('winner-text').style.opacity = '0';
+                const oldItems = stage.querySelectorAll('.vortex-item');
+                oldItems.forEach(el => el.remove());
+                
+                if (typeof currentOnFinished === 'function') {
+                    const callback = currentOnFinished;
+                    currentOnFinished = null; 
+                    callback();
+                }
+            }, 800);
+        }
+
+        // 初始化
         loadPhotos();
         checkUploadStatus();
+        checkLottery();
     </script>
 </body>
 </html>
