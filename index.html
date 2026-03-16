@@ -320,24 +320,47 @@
 		// 1. 中選者のデータを取得してアニメーションを開始する
 		async function checkLottery() {
 		    // 【关键点1】检查浏览器缓存，如果本轮会话已看过，直接拦截，不执行后续逻辑
-		    if (sessionStorage.getItem('lottery_viewed') === 'true') {
-		        console.log("抽奖动画本轮已播放过，跳过");
-		        return;
-		    }
+		    //if (sessionStorage.getItem('lottery_viewed') === 'true') {
+		        //console.log("抽奖动画本轮已播放过，跳过");
+		        //return;
+		    //}
 
 		    // 【关键点2】只获取 flag 为 true 的最新中奖信息
 		    const { data, error } = await myAppClient
 		        .from('lottery_results')
 		        .select('*')
-		        .eq('flag', true) // 仅筛选中奖者
+		        .eq('flag', true) 
 		        .order('draw_time', { ascending: false })
-		        .limit(1)
+		        .limit(3)
 		        .single();
 
-		    if (data) {
+		    //if (data) {
 		        // 只有存在 true 的数据且符合时间要求（可选）才播放
-		        console.log("发现中奖者，准备播放动画:", data);
-		        startVortexAnimation(data);
+		        //console.log("发现中奖者，准备播放动画:", data);
+		       // startVortexAnimation(data);
+		   // }
+		   
+		   if (data && data.length > 0) {
+		        // 定义一个播放队列
+		        let currentIndex = 0;
+
+		        const playNext = () => {
+		            if (currentIndex < data.length) {
+		                // 播放当前这一个
+		                startVortexAnimation(data[currentIndex], () => {
+		                    // 当用户点击“关闭”时，回调这个函数播放下一个
+		                    currentIndex++;
+		                    if (currentIndex < data.length) {
+		                        playNext();
+		                    } else {
+		                        // 全部播完，标记为看过
+		                        sessionStorage.setItem('lottery_viewed', 'true');
+		                    }
+		                });
+		            }
+		        };
+
+		        playNext();
 		    }
 		}
 
@@ -410,10 +433,18 @@
 		    stage.style.opacity = '0';
 
 		    setTimeout(() => {
-		        stage.style.display = 'none';
+		        //stage.style.display = 'none';
 		        // 【关键点3】写入缓存标记，这样刷新页面后 checkLottery 第一行就会拦截
-		        sessionStorage.setItem('lottery_viewed', 'true');
-		        console.log("已标记动画为看过状态");
+		        //sessionStorage.setItem('lottery_viewed', 'true');
+		       // console.log("已标记动画为看过状态");
+		       stage.style.display = 'none';
+            // 清空旧的碎片和文字状态，为下一个中奖者腾地方
+            document.getElementById('winner-text').style.opacity = '0';
+            const oldItems = stage.querySelectorAll('.vortex-item');
+            oldItems.forEach(el => el.remove());
+            
+            // 执行回调，通知播放下一个
+            if (onFinished) onFinished();
 		    }, 800);
 		}
 		checkLottery();
