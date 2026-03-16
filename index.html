@@ -118,10 +118,25 @@
                     <option value="ドールヘッド">りあっ娘</option>
                 </select>
                 <input type="file" id="file_input" accept="image/*" class="hidden">
-                <button onclick="document.getElementById('file_input').click()" 
+                <div id="preview-container" class="hidden mt-4 mb-4">
+				    <p class="text-[10px] text-gray-400 mb-2">プレビュー:</p>
+				    <img id="image-preview" src="" class="max-h-64 mx-auto rounded-lg shadow-sm border border-pink-100">
+				</div>
+				<div class="space-y-3">
+				    <button id="select-btn" onclick="document.getElementById('file_input').click()" 
+				            class="w-full bg-white border-2 border-[#8378c3] text-[#8378c3] hover:bg-pink-50 font-bold py-3 rounded-full transition duration-300">
+				        写真を選択する
+				    </button>
+
+				    <button id="upload-confirm-btn" onclick="handleFinalUpload()" 
+				            class="hidden w-full bg-[#8378c3] hover:bg-[#8a8ae0] text-white font-bold py-3 rounded-full shadow-lg transition duration-300">
+				        この内容で投稿を確定する
+				    </button>
+				</div>
+               <!-- <button onclick="document.getElementById('file_input').click()" 
                         class="w-full bg-[#8378c3] hover:bg-[#8a8ae0] text-white font-bold py-3 rounded-full shadow-lg transition duration-300">
                     写真を投稿する
-                </button>
+                </button>-->
                 <div id="loader" class="loading-spinner"></div>
                 <div id="status" class="text-xs text-pink-400 mt-2"></div>
                 <div class="text-center mt-4">
@@ -155,6 +170,17 @@
             </div>
         </div>
     </section>
+
+	<div class="max-w-7xl mx-auto mb-8 mt-16 px-4">
+	    <div class="flex items-center justify-center gap-4">
+	        <div class="h-[1px] bg-[#8378c3] flex-1 opacity-30"></div>
+	        <h2 class="text-[#8378c3] font-bold text-lg tracking-wider flex items-center gap-2">
+	            みんなのお写真
+	        </h2>
+	        <div class="h-[1px] bg-[#8378c3] flex-1 opacity-30"></div>
+	    </div>
+	    <p class="text-center text-[11px] text-gray-400 mt-2">ご投稿いただいたお写真は承認後にこちらに表示されます</p>
+	</div>
 
     <div id="gallery" class="masonry max-w-7xl mx-auto"></div>
 
@@ -231,34 +257,118 @@
             });
         };
 
+
+		const previewContainer = document.getElementById('preview-container');
+		const imagePreview = document.getElementById('image-preview');
+		const uploadConfirmBtn = document.getElementById('upload-confirm-btn');
+		const selectBtn = document.getElementById('select-btn');
+		let selectedFileBlob = null; // 圧縮後のデータを一時保存
+
         fileInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
+
             loader.style.display = 'block';
-            statusText.innerText = '画像を最適化中...';
+            statusText.innerText = 'プレビューを作成中...';
             try {
-                const compressedBlob = await compressImage(file);
-                const fileSizeKB = (compressedBlob.size / 1024).toFixed(1);
-                const fileName = `${Date.now()}.jpg`;
-                statusText.innerText = 'アップロード中...';
-                const { error: uploadError } = await myAppClient.storage.from('photos').upload(fileName, compressedBlob);
-                if (uploadError) throw uploadError;
-                const { data: urlData } = myAppClient.storage.from('photos').getPublicUrl(fileName);
-                const twitterId = twitterInput.value || 'Anonymous';
-                const category = document.getElementById('category_select').value || '未分類';
-                const { error: dbError } = await myAppClient.from('gallery').insert([{ 
-                    url: urlData.publicUrl, twitter_id: twitterId, category: category, is_approved: false, file_size: fileSizeKB 
-                }]);
-                if (dbError) throw dbError;
-                statusText.innerText = '投稿が完了しました！承認をお待ちください。';
-                twitterInput.value = '';
-                document.getElementById('category_select').value = '';
-            } catch (err) {
-                statusText.innerText = 'エラーが発生しました: ' + (err.message || '通信失敗');
-            } finally {
-                loader.style.display = 'none';
-            }
+		        // 画像を圧縮してプレビュー用に保持
+		        selectedFileBlob = await compressImage(file);
+		        
+		        // プレビュー表示
+		        const reader = new FileReader();
+		        reader.onload = (event) => {
+		            imagePreview.src = event.target.result;
+		            previewContainer.classList.remove('hidden');
+		            uploadConfirmBtn.classList.remove('hidden'); // 確定ボタンを表示
+		            selectBtn.innerText = "写真を変更する";
+		            statusText.innerText = '内容を確認して「投稿を確定」を押してください。';
+		        };
+		        reader.readAsDataURL(selectedFileBlob);
+
+		    } catch (err) {
+		        statusText.innerText = 'プレビュー失敗: ' + err.message;
+		    } finally {
+		        loader.style.display = 'none';
+		    }
         };
+        
+        // 2. 「確定ボタン」が押された時の最終アップロード処理
+		async function handleFinalUpload() {
+		    if (!selectedFileBlob) return;
+
+			const twitterId = twitterInput.value.trim();
+		    const category = document.getElementById('category_select').value;
+
+		    if (!twitterId) {
+		        alert("X (Twitter) IDを入力してください。");
+		        twitterInput.focus();
+		        return;
+		    }
+
+		    if (!category) {
+		        alert("カテゴリーを選択してください。");
+		        document.getElementById('category_select').focus();
+		        return;
+		    }
+    
+		    // ボタンの二重押し防止
+		    uploadConfirmBtn.disabled = true;
+		    uploadConfirmBtn.style.opacity = "0.5";
+		    loader.style.display = 'block';
+		    statusText.innerText = 'サーバーに送信中...';
+
+		    try {
+		        const fileSizeKB = (selectedFileBlob.size / 1024).toFixed(1);
+		        const fileName = `${Date.now()}.jpg`;
+
+		        // Supabase Storageへアップロード
+		        const { error: uploadError } = await myAppClient.storage.from('photos').upload(fileName, selectedFileBlob);
+		        if (uploadError) throw uploadError;
+
+		        // 公開URL取得
+		        const { data: urlData } = myAppClient.storage.from('photos').getPublicUrl(fileName);
+
+		        // DBへ登録
+		        const twitterId = twitterInput.value || 'Anonymous';
+		        const category = document.getElementById('category_select').value || '未分類';
+
+		        const { error: dbError } = await myAppClient.from('gallery').insert([{ 
+		            url: urlData.publicUrl, 
+		            twitter_id: twitterId, 
+		            category: category, 
+		            is_approved: false, 
+		            file_size: fileSizeKB 
+		        }]);
+
+		        if (dbError) throw dbError;
+
+		        // 成功時の処理
+		        statusText.innerText = '投稿が完了しました！承認をお待ちください。';
+		        
+		        // フォームのリセット
+		        resetUploadForm();
+
+		    } catch (err) {
+		        statusText.innerText = 'エラーが発生しました: ' + (err.message || '通信失敗');
+		        uploadConfirmBtn.disabled = false;
+		        uploadConfirmBtn.style.opacity = "1";
+		    } finally {
+		        loader.style.display = 'none';
+		    }
+		}
+		
+		// フォームリセット用関数
+		function resetUploadForm() {
+		    twitterInput.value = '';
+		    document.getElementById('category_select').value = '';
+		    fileInput.value = '';
+		    selectedFileBlob = null;
+		    previewContainer.classList.add('hidden');
+		    uploadConfirmBtn.classList.add('hidden');
+		    uploadConfirmBtn.disabled = false;
+		    uploadConfirmBtn.style.opacity = "1";
+		    selectBtn.innerText = "写真を投稿する";
+		}
 
         // --- 抽奖核心逻辑修复版 ---
 
