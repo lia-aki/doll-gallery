@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RosenliaDollギャラリー | RosenliaDoll Gallery</title>
+    <link rel="icon" type="image/png" href="https://eiladnaqqcddtkfqypvb.supabase.co/storage/v1/object/public/event-pictures/momorin.png">
+    <link rel="apple-touch-icon" href="https://eiladnaqqcddtkfqypvb.supabase.co/storage/v1/object/public/event-pictures/momorin.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap');
+        
+        /* --- 仅修改背景为木纹 --- */
+        body { 
+            background-color: #faf9ff; 
+            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+            background-attachment: fixed;
+            color: #5a5255; 
+            font-family: 'Noto Sans JP', sans-serif; 
+            margin: 0;
+        }
+
+        /* --- 游动感核心动画（仅作用于 Gallery 项目） --- */
+        @keyframes subtle-float {
+            0%, 100% { transform: translate(0, 0) rotate(var(--r1)); }
+            50% { transform: translate(var(--mx), var(--my)) rotate(var(--r2)); }
+        }
+
+        .masonry { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
+            grid-gap: 35px; 
+            grid-auto-flow: dense; 
+            padding-top: 20px;
+        }
+
+        /* --- 仅针对 Gallery Item 的拍立得重写 --- */
+        .masonry-item { 
+            background: white; 
+            padding: 12px 12px 40px 12px; /* 模拟底部留白 */
+            box-shadow: 4px 8px 15px rgba(0, 0, 0, 0.2); 
+            position: relative;
+            animation: subtle-float var(--dur) ease-in-out infinite;
+            animation-delay: var(--delay);
+            transition: transform 0.3s ease, z-index 0s;
+            user-select: none;
+            cursor: zoom-in; /* 新增：放大光标 */
+        }
+
+        /* 红色图钉 */
+        .masonry-item::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 14px;
+            background: radial-gradient(circle at 50% 50%, #e6e6fc, #8378c3);
+            border-radius: 50%;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .masonry-item:hover { 
+            transform: scale(1.08) rotate(0deg) !important; 
+            animation-play-state: paused;
+            z-index: 100;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .masonry-item img { 
+            width: 100%; 
+            aspect-ratio: 1/1; 
+            object-fit: cover; 
+            display: block; 
+        }
+
+        /* 画廊内部卡片的信息布局 */
+        .gallery-info {
+            position: absolute;
+            bottom: 10px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* --- 折叠组件样式 --- */
+        details summary {
+            list-style: none;
+            cursor: pointer;
+            outline: none;
+        }
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+        .collapse-trigger {
+            background: white;
+            border: 2px solid #8378c3;
+            color: #8378c3;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        details[open] .collapse-trigger {
+            background: #8378c3;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .collapse-trigger::after {
+            content: '▼';
+            font-size: 10px;
+            transition: transform 0.3s ease;
+        }
+        details[open] .collapse-trigger::after {
+            transform: rotate(180deg);
+            content: '▲';
+        }
+
+        /* --- 其余所有原始样式完全不动 --- */
+        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #ff9a9e; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: 10px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #lottery-stage { position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; }
+        .vortex-item { position: absolute; width: 140px; height: 140px; object-fit: cover; border-radius: 15px; transition: all 2.5s cubic-bezier(0.19, 1, 0.22, 1); pointer-events: none; }
+        .winner-final { left: 50% !important; top: 45% !important; transform: translate(-50%, -50%) scale(2.2) !important; z-index: 10000; border: 6px solid #ff9a9e; box-shadow: 0 0 50px rgba(255, 154, 158, 0.8); }
+        .category-chip.active { background-color: #8378c3; color: white; box-shadow: 0 4px 10px rgba(131, 120, 195, 0.3); }
+
+        /* --- 新增：放大层样式 --- */
+        #photo-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; z-index: 20000; cursor: zoom-out;
+            align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+        #modal-img { max-width: 95%; max-height: 90vh; border: 5px solid white; border-radius: 4px; }
+        
+        .hand-drawn-sun {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        width: 80px;
+        height: 80px;
+        z-index: 1000;
+        pointer-events: none;
+        opacity: 0.8;
+        /* 运行两个动画：一个是旋转，一个是呼吸感缩放 */
+        animation: sun-rotate 10s linear infinite, sun-pulse 4s ease-in-out infinite;
+        transform-origin: center;
+    }
+
+    /* 慢慢转动 */
+    @keyframes sun-rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* 呼吸缩放效果 */
+    @keyframes sun-pulse {
+        0%, 100% { transform: scale(1) rotate(0deg); } /* 注意：如果同时有旋转，这里的rotate需要和上面配合，或者套两层DIV */
+        50% { transform: scale(1.1); }
+    }
+    
+    /* 修正：为了让两个动画互不干扰，建议用下面这种合成写法 */
+    .hand-drawn-sun {
+        animation: sun-main-anim 12s linear infinite;
+    }
+
+    @keyframes sun-main-anim {
+        0% { transform: rotate(0deg) scale(1); }
+        25% { transform: rotate(90deg) scale(1.05); }
+        50% { transform: rotate(180deg) scale(1); }
+        75% { transform: rotate(270deg) scale(1.05); }
+        100% { transform: rotate(360deg) scale(1); }
+    }
+    </style>
+</head>
+<div class="hand-drawn-sun">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M30,50 c0-15,25-20,40-10 c10,8,10,25,0,35 c-10,10-40,5-40-25" 
+              fill="#FFD700" stroke="#f39c12" stroke-width="2" />
+        <g stroke="#f39c12" stroke-width="3" stroke-linecap="round">
+            <line x1="50" y1="20" x2="50" y2="5" />
+            <line x1="50" y1="80" x2="50" y2="95" />
+            <line x1="20" y1="50" x2="5" y2="50" />
+            <line x1="80" y1="50" x2="95" y2="50" />
+            <line x1="28" y1="28" x2="18" y2="18" />
+            <line x1="72" y1="72" x2="82" y2="82" />
+            <line x1="28" y1="72" x2="18" y2="82" />
+            <line x1="72" y1="28" x2="82" y2="18" />
+        </g>
+    </svg>
+</div>
+<body class="p-4 md:p-10">
+    <div id="photo-modal" onclick="this.style.display='none'">
+        <img id="modal-img" src="">
+    </div>
+
+    <div id="lottery-stage">
+        <div id="winner-text" class="absolute bottom-20 w-full text-center opacity-0 transition-opacity duration-1000" style="z-index: 10001;">
+            <h2 class="text-3m font-bold text-white mb-2">🎉 ご当選おめでとうございます！ 🎉</h2>
+            <p id="winner-id-display" class="text-xl text-[#8378c3] font-bold mb-6"></p>
+            <button onclick="closeLottery()" class="px-10 py-3 bg-[#8378c3] text-white rounded-full font-bold shadow-lg hover:bg-[#8a8ae0] transition">閉じる</button>
+        </div>
+    </div>
+
+    <header class="text-center mb-10">
+        <div class="flex justify-center items-center max-w-full overflow-hidden">
+            <img src="https://eiladnaqqcddtkfqypvb.supabase.co/storage/v1/object/public/event-pictures/momorin.png" alt="Logo" class="h-28 w-auto">
+        </div>
+        <p class="text-xs text-[#8378c3] tracking-widest uppercase font-bold">RosenliaDoll Photo Gallery(ベータ版)</p>
+    </header>
+    
+    <div id="upload-section-container" class="max-w-xl mx-auto mb-16 text-center">
+        <details>
+            <summary>
+                <div class="collapse-trigger">写真を投稿する</div>
+            </summary>
+
+            <section id="upload-section" class="max-w-xl mx-auto mb-16 bg-white border border-[#8378c3] rounded-3xl p-8 shadow-sm">
+                <div class="text-center">
+                    <h2 class="text-lg font-bold text-[#8378c3] mb-4">✨ Xのプレ企画実施中 ✨</h2>
+                    <p class="text-sm text-gray-500 mb-6 leading-relaxed">
+                        お写真を投稿いただいた方の中から、抽選で<br>
+                        プレゼントいたします。
+                    </p>
+                    <div class="space-y-4">
+                        <input type="text" id="twitter_id" placeholder="X (Twitter) ID を記入してください" 
+                               class="w-full border-b-2 border-pink-50 py-2 px-4 focus:outline-none focus:border-[#8378c3] text-center">
+                        <div class="w-full mt-4">
+                            <p class="text-[11px] text-gray-400 mb-2 text-center font-bold">カテゴリー（複数選択可）</p>
+                            <div id="category_container" class="flex flex-wrap justify-center gap-2">
+                                <button type="button" onclick="toggleCategory(this)" data-value="お洋服" class="category-chip px-4 py-1.5 rounded-full border border-[#8378c3] text-[#8378c3] text-xs transition-all">お洋服</button>
+                                <button type="button" onclick="toggleCategory(this)" data-value="ウィッグ" class="category-chip px-4 py-1.5 rounded-full border border-[#8378c3] text-[#8378c3] text-xs transition-all">ウィッグ</button>
+                                <button type="button" onclick="toggleCategory(this)" data-value="りあっ娘" class="category-chip px-4 py-1.5 rounded-full border border-[#8378c3] text-[#8378c3] text-xs transition-all">りあっ娘</button>
+                            </div>
+                        </div>
+                        <input type="file" id="file_input" accept="image/*" class="hidden">
+                        <div id="preview-container" class="hidden mt-4 mb-4">
+                            <p class="text-[10px] text-gray-400 mb-2">プレビュー:</p>
+                            <img id="image-preview" src="" class="max-h-64 mx-auto rounded-lg shadow-sm border border-pink-100">
+                        </div>
+                        <div class="space-y-3">
+                            <button id="select-btn" onclick="document.getElementById('file_input').click()" class="w-full bg-white border-2 border-[#8378c3] text-[#8378c3] hover:bg-pink-50 font-bold py-3 rounded-full transition duration-300">写真を選択する</button>
+                            <button id="upload-confirm-btn" onclick="handleFinalUpload()" class="hidden w-full bg-[#8378c3] hover:bg-[#8a8ae0] text-white font-bold py-3 rounded-full shadow-lg transition duration-300">この内容で投稿を確定する</button>
+                        </div>
+                        <div id="loader" class="loading-spinner"></div>
+                        <div id="status" class="text-xs text-pink-400 mt-2"></div>
+                        <div class="text-center mt-4">
+                            <p class="text-[10px] text-gray-400 inline-block text-left leading-relaxed">
+                                ※同一IDが複数投稿する場合、容量的都合上枚数制限される場合があります。<br>
+                                ※投稿された写真は運営の承認後に反映されます。<br>
+                                ※大きな画像は自動的に最適化（圧縮）されます。<br>
+                                ※本サイト上でのお支払い、金銭のやり取りは一切発生いたしません。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="campaign-notes" class="mt-8 pt-6 border-t border-pink-50 text-left">
+                    <div class="mb-6">
+                        <h3 class="text-xs font-bold text-[#8378c3] mb-2">【募集対象】</h3>
+                        <p class="text-[11px] text-gray-500 leading-relaxed">
+                            RosenliaDollの作品（りあっ娘・お洋服・ウィッグ）が主役となるお写真を歓迎しております！<br>
+                            どちらか一つでもご参加いただけます✨
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-bold text-[#8378c3] mb-2">【注意事項】</h3>
+                        <ul class="text-[10px] text-gray-400 space-y-1 list-disc ml-4 leading-relaxed">
+                            <li>投稿されるお写真は、投稿者ご本人が撮影したもの、または投稿の許可を得ているものに限ります。</li>
+                            <li>投稿していただいたお写真はRosenliaDollのウェブサイト、SNSまたはイベントにてご展示させていただく場合がございます。</li>
+                            <li>公序良俗に反する内容、または企画の趣旨に合わないと判断した場合、掲載を見送らせていただく場合がございます。</li>
+                            <li>本企画は予告なく内容を変更または終了する場合がございます。</li>
+                            <li>抽選結果は本ページおよびXの告知、または投稿時に記載されたアカウントへのDMでお知らせいたします。</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </details>
+    </div>
+
+    <div class="max-w-7xl mx-auto mb-8 mt-16 px-4">
+        <div class="flex items-center justify-center gap-4">
+            <div class="h-[1px] bg-[#8378c3] flex-1 opacity-50"></div>
+            <h2 class="text-[#8378c3] font-bold text-lg tracking-wider flex items-center gap-2 drop-shadow-md">
+                みんなのお写真
+            </h2>
+            <div class="h-[1px] bg-[#8378c3] flex-1 opacity-50"></div>
+        </div>
+        <p class="text-center text-[11px] text-[#8378c3]/70 mt-2">ご投稿いただいたお写真は承認後にこちらに表示されます</p>
+    </div>
+
+    <div id="gallery" class="masonry max-w-7xl mx-auto"></div>
+
+    <footer class="mt-20 py-10 border-t border-[#8378c3]/20 text-center text-[#8378c3]/70 text-[10px]">
+        <p>&copy; 2026 RosenliaDoll. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        const SB_URL = 'https://eiladnaqqcddtkfqypvb.supabase.co'; 
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbGFkbmFxcWNkZHRrZnF5cHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNTI1MjAsImV4cCI6MjA4NjkyODUyMH0.ypTl6LS3wvjc_24-eCNOxvvZVOAQ6F_PGhoXfHWW8pY'; 
+        const myAppClient = supabase.createClient(SB_URL, SB_KEY);
+
+        const fileInput = document.getElementById('file_input');
+        const statusText = document.getElementById('status');
+        const loader = document.getElementById('loader');
+        const twitterInput = document.getElementById('twitter_id');
+        
+        document.getElementById('gallery').addEventListener('contextmenu', e => e.preventDefault(), false);
+
+        // --- 仅在此处加了一个 onclick ---
+        async function loadPhotos() {
+            const { data } = await myAppClient.from('gallery').select('*').eq('is_approved', true).order('created_at', { ascending: false });
+            if (data) {
+                const galleryDiv = document.getElementById('gallery');
+                galleryDiv.innerHTML = data.map(item => {
+                    const dur = 7 + Math.random() * 5;
+                    const delay = Math.random() * -10;
+                    const mx = (Math.random() - 0.5) * 16;
+                    const my = (Math.random() - 0.5) * 16;
+                    const r1 = (Math.random() - 0.5) * 6;
+                    const r2 = (Math.random() - 0.5) * 12;
+
+                    return `
+                    <div class="masonry-item" onclick="openFullPhoto('${item.url}')" style="--dur:${dur}s; --delay:${delay}s; --mx:${mx}px; --my:${my}px; --r1:${r1}deg; --r2:${r2}deg;">
+                        <img src="${item.url}" loading="lazy">
+                        <div class="gallery-info">
+                            <span class="text-[9px] font-bold text-[#8378c3]">@${item.twitter_id || '匿名'}</span>
+                            <span class="text-[8px] text-[#8a8ae0] bg-[#f8f7ff] border border-[#e9e4ff] px-1.5 py-0.5 rounded">${item.category || ''}</span>
+                        </div>
+                    </div>`
+                }).join('');
+            }
+        }
+
+        // 新增：放大函数
+        function openFullPhoto(url) {
+            document.getElementById('modal-img').src = url;
+            document.getElementById('photo-modal').style.display = 'flex';
+        }
+
+        /* --- 以下所有逻辑完全恢复为你提供的原始代码 --- */
+        async function checkUploadStatus() {
+            const { data } = await myAppClient.from('settings').select('value').eq('key', 'is_upload_enabled').single();
+            const uploadSection = document.getElementById('upload-section-container');
+            if (data && data.value === false) {
+                uploadSection.style.display = 'none';
+                const endMessage = document.createElement('div');
+                endMessage.id = 'end-message';
+                endMessage.className = 'max-w-xl mx-auto mb-16 text-center p-8 border border-dashed border-[#8378c3] rounded-3xl bg-white/10';
+                endMessage.innerHTML = `<p class="text-[#8378c3] font-bold">✨ 当期投稿は終了いたしました ✨</p><p class="text-xs text-gray-400 mt-2">次回の開催をどうぞ楽しみにお待ちください。</p>`;
+                if (!document.getElementById('end-message')) uploadSection.parentNode.insertBefore(endMessage, uploadSection);
+            }
+        }
+
+        const compressImage = (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image(); img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas'); const MAX_WIDTH = 1200;
+                        let width = img.width, height = img.height;
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                        canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', 0.8);
+                    };
+                };
+            });
+        };
+
+        const previewContainer = document.getElementById('preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const uploadConfirmBtn = document.getElementById('upload-confirm-btn');
+        const selectBtn = document.getElementById('select-btn');
+        let selectedFileBlob = null;
+        let selectedCategories = [];
+
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            loader.style.display = 'block'; statusText.innerText = 'プレビューを作成中...';
+            try {
+                selectedFileBlob = await compressImage(file);
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    imagePreview.src = event.target.result;
+                    previewContainer.classList.remove('hidden');
+                    uploadConfirmBtn.classList.remove('hidden');
+                    selectBtn.innerText = "写真を変更する";
+                };
+                reader.readAsDataURL(selectedFileBlob);
+            } catch (err) {} finally { loader.style.display = 'none'; }
+        };
+
+        function toggleCategory(el) {
+            const value = el.getAttribute('data-value');
+            if (selectedCategories.includes(value)) {
+                selectedCategories = selectedCategories.filter(c => c !== value);
+                el.classList.remove('active');
+            } else {
+                selectedCategories.push(value);
+                el.classList.add('active');
+            }
+        }
+
+        async function handleFinalUpload() {
+            if (!selectedFileBlob || !twitterInput.value.trim() || selectedCategories.length === 0) {
+                alert("IDとカテゴリーを入力してください。"); return;
+            }
+            uploadConfirmBtn.disabled = true; loader.style.display = 'block';
+            try {
+                const fileName = `${Date.now()}.jpg`;
+                const { error } = await myAppClient.storage.from('photos').upload(fileName, selectedFileBlob);
+                if (error) throw error;
+                const { data: urlData } = myAppClient.storage.from('photos').getPublicUrl(fileName);
+                await myAppClient.from('gallery').insert([{ 
+                    url: urlData.publicUrl, twitter_id: twitterInput.value, 
+                    category: selectedCategories.join(', '), is_approved: false 
+                }]);
+                statusText.innerText = '投稿が完了しました！承認をお待ちください。';
+                resetUploadForm();
+            } catch (err) { alert(err.message); } finally { loader.style.display = 'none'; }
+        }
+
+        function resetUploadForm() {
+            twitterInput.value = ''; selectedCategories = [];
+            document.querySelectorAll('.category-chip').forEach(chip => chip.classList.remove('active'));
+            previewContainer.classList.add('hidden'); uploadConfirmBtn.classList.add('hidden');
+            selectBtn.innerText = "写真を投稿する";
+        }
+
+        async function checkLottery() {
+            const { data } = await myAppClient.from('lottery_results').select('*').eq('flag', true).order('draw_time', { ascending: false }).limit(3);
+            if (data && data.length > 0) {
+                let currentIndex = 0;
+                const playNext = () => {
+                    if (currentIndex < data.length) startVortexAnimation(data[currentIndex++], playNext);
+                };
+                playNext();
+            }
+        }
+
+        async function startVortexAnimation(winnerData, onFinished) {
+            const stage = document.getElementById('lottery-stage');
+            stage.style.display = 'flex'; stage.style.opacity = '1';
+            const { data: photos } = await myAppClient.from('gallery').select('url').limit(15);
+            const centerX = window.innerWidth / 2; const centerY = window.innerHeight / 2;
+            stage.querySelectorAll('.vortex-item').forEach(el => el.remove());
+            const count = 20;
+            const items = [];
+            for (let i = 0; i < count; i++) {
+                const img = document.createElement('img');
+                const isWinner = (i === count - 1);
+                img.src = isWinner ? winnerData.winner_url : (photos[i % (photos?.length || 1)]?.url || winnerData.winner_url);
+                img.className = 'vortex-item';
+                const angle = Math.random() * Math.PI * 2; const radius = Math.max(window.innerWidth, window.innerHeight);
+                img.style.left = `${centerX + Math.cos(angle) * radius}px`;
+                img.style.top = `${centerY + Math.sin(angle) * radius}px`;
+                stage.appendChild(img);
+                items.push({ el: img, isWinner });
+            }
+            setTimeout(() => {
+                items.forEach(item => {
+                    if (item.isWinner) {
+                        item.el.classList.add('winner-final');
+                        setTimeout(() => {
+                            document.getElementById('winner-id-display').innerText = `@${winnerData.winner_twitter} 様`;
+                            document.getElementById('winner-text').style.opacity = '1';
+                            currentOnFinished = onFinished;
+                        }, 2000);
+                    } else {
+                        item.el.style.left = `${centerX}px`; item.el.style.top = `${centerY}px`;
+                        item.el.style.transform = `scale(0)`; item.el.style.opacity = '0';
+                    }
+                });
+            }, 100);
+        }
+
+        let currentOnFinished = null;
+        function closeLottery() {
+            const stage = document.getElementById('lottery-stage');
+            stage.style.display = 'none';
+            if (currentOnFinished) { const cb = currentOnFinished; currentOnFinished = null; cb(); }
+        }
+
+        loadPhotos(); checkUploadStatus(); checkLottery();
+    </script>
+</body>
+</html>
